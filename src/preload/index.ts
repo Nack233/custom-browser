@@ -49,6 +49,20 @@ const api: BrowserApi = {
   openDownloadFile: (filePath: string) => ipcRenderer.invoke('downloads:open-file', filePath),
   openDownloadsFolder: () => ipcRenderer.invoke('downloads:open-folder'),
 
+  // Per-Tab Audio & Volume Control
+  setTabVolume: (tabId: string, volume: number) => ipcRenderer.invoke('tab:set-volume', tabId, volume),
+  toggleTabMute: (tabId: string) => ipcRenderer.invoke('tab:toggle-mute', tabId),
+
+  // Page Zoom Controls
+  setTabZoom: (tabId: string, zoomFactor: number) => ipcRenderer.invoke('tab:set-zoom', tabId, zoomFactor),
+  zoomIn: (tabId: string) => ipcRenderer.invoke('tab:zoom-in', tabId),
+  zoomOut: (tabId: string) => ipcRenderer.invoke('tab:zoom-out', tabId),
+  resetZoom: (tabId: string) => ipcRenderer.invoke('tab:reset-zoom', tabId),
+
+  // Developer Mode
+  toggleDevTools: (tabId?: string) => ipcRenderer.invoke('dev:toggle-devtools', tabId),
+  toggleAppDevTools: () => ipcRenderer.invoke('dev:toggle-app-devtools'),
+
   onTabsUpdated: (callback: (tabs: TabInfo[], activeTabId: string) => void) => {
     const handler = (_event: any, tabs: TabInfo[], activeTabId: string) => callback(tabs, activeTabId);
     ipcRenderer.on('tabs:updated', handler);

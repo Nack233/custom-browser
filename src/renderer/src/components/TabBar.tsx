@@ -1,6 +1,17 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import type { TabInfo } from '../../types/browser';
-import { Plus, X, Globe, Loader2, EyeOff, RotateCcw } from 'lucide-react';
+import {
+  Plus,
+  X,
+  Globe,
+  Loader2,
+  EyeOff,
+  RotateCcw,
+  Volume2,
+  VolumeX,
+  Volume1,
+  Sliders,
+} from 'lucide-react';
 
 interface TabBarProps {
   tabs: TabInfo[];
@@ -23,6 +34,37 @@ export const TabBar: React.FC<TabBarProps> = ({
   onRestoreClosedTab,
   canRestoreClosed,
 }) => {
+  const [volumePopoverTabId, setVolumePopoverTabId] = useState<string | null>(null);
+  const popoverRef = useRef<HTMLDivElement | null>(null);
+
+  // Close volume popover when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setVolumePopoverTabId(null);
+      }
+    };
+    if (volumePopoverTabId) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [volumePopoverTabId]);
+
+  const handleToggleMute = (e: React.MouseEvent, tabId: string) => {
+    e.stopPropagation();
+    window.browserApi.toggleTabMute(tabId);
+  };
+
+  const handleOpenVolumePopover = (e: React.MouseEvent, tabId: string) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setVolumePopoverTabId(volumePopoverTabId === tabId ? null : tabId);
+  };
+
+  const handleVolumeChange = (tabId: string, value: number) => {
+    window.browserApi.setTabVolume(tabId, value);
+  };
+
   return (
     <div
       className="flex items-center h-10 px-2 bg-[#121214] select-none border-b border-[#222226]"
@@ -33,11 +75,17 @@ export const TabBar: React.FC<TabBarProps> = ({
           const isActive = tab.id === activeTabId;
           const isIncognito = tab.isIncognito;
           const isSleeping = tab.isSleeping;
+          const isPlayingAudio = Boolean(tab.isPlayingAudio);
+          const isMuted = Boolean(tab.isMuted);
+          const volume = tab.volume !== undefined ? tab.volume : 100;
+          const hasAudioActivity = isPlayingAudio || isMuted;
+          const isPopoverOpen = volumePopoverTabId === tab.id;
 
           return (
             <div
               key={tab.id}
               onClick={() => onSelectTab(tab.id)}
+              onContextMenu={(e) => handleOpenVolumePopover(e, tab.id)}
               style={{ WebkitAppRegion: 'no-drag' } as any}
               className={`group relative flex items-center h-8 px-3 max-w-[210px] min-w-[125px] rounded-lg text-xs cursor-pointer transition-all duration-150 ${
                 isSleeping ? 'opacity-60 hover:opacity-100' : ''
@@ -87,6 +135,31 @@ export const TabBar: React.FC<TabBarProps> = ({
                 {tab.title || (tab.isLoading ? 'Loading...' : isIncognito ? 'Incognito' : 'New Tab')}
               </span>
 
+              {/* Per-Tab Audio Indicator & Mute Button */}
+              {hasAudioActivity && (
+                <button
+                  type="button"
+                  onClick={(e) => handleToggleMute(e, tab.id)}
+                  onContextMenu={(e) => handleOpenVolumePopover(e, tab.id)}
+                  className={`ml-1 p-1 rounded-md transition-all flex items-center justify-center flex-shrink-0 ${
+                    isMuted
+                      ? 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 ring-1 ring-rose-500/40'
+                      : 'text-emerald-400 hover:bg-[#32323e]'
+                  }`}
+                  title={
+                    isMuted
+                      ? 'แท็บนี้ถูกปิดเสียง (คลิกเพื่อเปิดเสียง / คลิกขวาเพื่อปรับระดับเสียง)'
+                      : `กำลังเล่นเสียง [${volume}%] (คลิกเพื่อปิดเสียง / คลิกขวาเพื่อปรับระดับเสียง)`
+                  }
+                >
+                  {isMuted ? (
+                    <VolumeX className="w-3.5 h-3.5" />
+                  ) : (
+                    <Volume2 className="w-3.5 h-3.5 animate-pulse text-emerald-400" />
+                  )}
+                </button>
+              )}
+
               {/* Close Button */}
               <button
                 onClick={(e) => {
@@ -100,6 +173,77 @@ export const TabBar: React.FC<TabBarProps> = ({
               >
                 <X className="w-3 h-3 text-gray-400 hover:text-white" />
               </button>
+
+              {/* Tab Volume Slider Popover */}
+              {isPopoverOpen && (
+                <div
+                  ref={popoverRef}
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute top-10 left-0 z-50 w-56 p-3 bg-[#191920] border border-[#2f2f3d] rounded-xl shadow-2xl shadow-black/80 animate-in fade-in duration-150"
+                  style={{ WebkitAppRegion: 'no-drag' } as any}
+                >
+                  <div className="flex items-center justify-between pb-2 border-b border-[#282834]">
+                    <div className="flex items-center space-x-1.5 text-[11px] font-semibold text-gray-200">
+                      <Sliders className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>ระดับเสียงแท็บ</span>
+                    </div>
+                    <span className="font-mono text-[11px] font-bold text-indigo-300">
+                      {isMuted ? 'Muted' : `${volume}%`}
+                    </span>
+                  </div>
+
+                  {/* Slider Control */}
+                  <div className="py-3 space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={(e) => handleToggleMute(e, tab.id)}
+                        className={`p-1 rounded-md transition-colors ${
+                          isMuted ? 'text-rose-400 bg-rose-500/20' : 'text-gray-400 hover:text-white'
+                        }`}
+                        title={isMuted ? 'Unmute' : 'Mute'}
+                      >
+                        {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume1 className="w-4 h-4" />}
+                      </button>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={isMuted ? 0 : volume}
+                        onChange={(e) => handleVolumeChange(tab.id, Number(e.target.value))}
+                        className="w-full accent-indigo-500 h-1.5 bg-[#2a2a38] rounded-lg cursor-pointer"
+                      />
+                    </div>
+
+                    {/* Quick Preset Buttons */}
+                    <div className="flex items-center justify-between pt-1 text-[10px] text-gray-400 font-medium">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!isMuted) window.browserApi.toggleTabMute(tab.id);
+                        }}
+                        className="px-2 py-0.5 rounded bg-[#242430] hover:bg-[#323242] hover:text-white transition-colors"
+                      >
+                        Mute
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleVolumeChange(tab.id, 50)}
+                        className="px-2 py-0.5 rounded bg-[#242430] hover:bg-[#323242] hover:text-white transition-colors"
+                      >
+                        50%
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleVolumeChange(tab.id, 100)}
+                        className="px-2 py-0.5 rounded bg-[#242430] hover:bg-[#323242] hover:text-white transition-colors"
+                      >
+                        100%
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}

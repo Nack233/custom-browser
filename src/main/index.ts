@@ -253,6 +253,47 @@ function setupIpc() {
   ipcMain.handle('downloads:open-folder', async () => {
     await downloadManager?.openDownloadsFolder();
   });
+
+  // Per-Tab Audio & Volume Control
+  ipcMain.handle('tab:set-volume', (_event, tabId: string, volume: number) => {
+    viewManager?.setTabVolume(tabId, volume);
+  });
+
+  ipcMain.handle('tab:toggle-mute', (_event, tabId: string) => {
+    return viewManager?.toggleTabMute(tabId) ?? false;
+  });
+
+  // Page Zoom Controls
+  ipcMain.handle('tab:set-zoom', (_event, tabId: string, zoomFactor: number) => {
+    return viewManager?.setTabZoom(tabId, zoomFactor) ?? 1.0;
+  });
+
+  ipcMain.handle('tab:zoom-in', (_event, tabId: string) => {
+    return viewManager?.zoomIn(tabId) ?? 1.0;
+  });
+
+  ipcMain.handle('tab:zoom-out', (_event, tabId: string) => {
+    return viewManager?.zoomOut(tabId) ?? 1.0;
+  });
+
+  ipcMain.handle('tab:reset-zoom', (_event, tabId: string) => {
+    return viewManager?.resetZoom(tabId) ?? 1.0;
+  });
+
+  // Developer Mode & DevTools
+  ipcMain.handle('dev:toggle-devtools', (_event, tabId?: string) => {
+    viewManager?.toggleDevTools(tabId);
+  });
+
+  ipcMain.handle('dev:toggle-app-devtools', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      if (mainWindow.webContents.isDevToolsOpened()) {
+        mainWindow.webContents.closeDevTools();
+      } else {
+        mainWindow.webContents.openDevTools({ mode: 'detach' });
+      }
+    }
+  });
 }
 
 app.on('certificate-error', (event, _webContents, _url, _error, _certificate, callback) => {

@@ -8,6 +8,7 @@ import { MediaDrawer } from './components/MediaDrawer';
 import { AdShieldModal } from './components/AdShieldModal';
 import { SettingsModal } from './components/SettingsModal';
 import { DownloadsFlyout } from './components/DownloadsFlyout';
+import { UpdateLogModal } from './components/UpdateLogModal';
 import type { Language } from './i18n';
 
 export const App: React.FC = () => {
@@ -28,6 +29,8 @@ export const App: React.FC = () => {
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
   const [shortcuts, setShortcuts] = useState<ShortcutItem[]>([]);
   const [recentlyClosed, setRecentlyClosed] = useState<RecentlyClosedItem[]>([]);
+  const [isUpdateLogOpen, setIsUpdateLogOpen] = useState(false);
+  const [devModeEnabled, setDevModeEnabled] = useState(false);
 
   // Refresh recently closed tabs list
   const refreshRecentlyClosed = useCallback(async () => {
@@ -45,6 +48,7 @@ export const App: React.FC = () => {
         if (settings.language) setLanguage(settings.language);
         if (settings.forceDarkMode !== undefined) setForceDarkMode(settings.forceDarkMode);
         if (settings.showBookmarksBar !== undefined) setShowBookmarksBar(settings.showBookmarksBar);
+        if (settings.devModeEnabled !== undefined) setDevModeEnabled(settings.devModeEnabled);
       }
     });
 
@@ -140,11 +144,31 @@ export const App: React.FC = () => {
         e.preventDefault();
         window.browserApi.createTab('bocchy://newtab');
       }
+      // F12 or Ctrl + Shift + I: Toggle DevTools
+      else if (e.key === 'F12' || ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'i' || e.key === 'I'))) {
+        e.preventDefault();
+        if (activeTabId) window.browserApi.toggleDevTools(activeTabId);
+      }
+      // Zoom In: Ctrl + = or Ctrl + +
+      else if ((e.ctrlKey || e.metaKey) && (e.key === '=' || e.key === '+')) {
+        e.preventDefault();
+        if (activeTabId) window.browserApi.zoomIn(activeTabId);
+      }
+      // Zoom Out: Ctrl + -
+      else if ((e.ctrlKey || e.metaKey) && e.key === '-') {
+        e.preventDefault();
+        if (activeTabId) window.browserApi.zoomOut(activeTabId);
+      }
+      // Reset Zoom: Ctrl + 0
+      else if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+        e.preventDefault();
+        if (activeTabId) window.browserApi.resetZoom(activeTabId);
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [refreshRecentlyClosed]);
+  }, [refreshRecentlyClosed, activeTabId]);
 
   // Sync WebContentsView bounds when sidebar drawer opens/closes
   useEffect(() => {
@@ -344,6 +368,7 @@ export const App: React.FC = () => {
           isBookmarked={isBookmarked}
           forceDarkMode={forceDarkMode}
           showBookmarksBar={showBookmarksBar}
+          devModeEnabled={devModeEnabled}
           onNavigate={handleNavigate}
           onBack={handleBack}
           onForward={handleForward}
@@ -377,6 +402,22 @@ export const App: React.FC = () => {
           onToggleBookmark={handleToggleBookmark}
           onToggleForceDarkMode={handleToggleForceDarkMode}
           onToggleBookmarksBar={handleToggleBookmarksBar}
+          onToggleUpdateLog={() => setIsUpdateLogOpen(true)}
+          onToggleDevTools={() => {
+            if (activeTabId) window.browserApi.toggleDevTools(activeTabId);
+          }}
+          onZoomIn={() => {
+            if (activeTabId) window.browserApi.zoomIn(activeTabId);
+          }}
+          onZoomOut={() => {
+            if (activeTabId) window.browserApi.zoomOut(activeTabId);
+          }}
+          onResetZoom={() => {
+            if (activeTabId) window.browserApi.resetZoom(activeTabId);
+          }}
+          onSetZoom={(factor) => {
+            if (activeTabId) window.browserApi.setTabZoom(activeTabId, factor);
+          }}
           isMediaDrawerOpen={isMediaDrawerOpen}
           isShieldOpen={isShieldOpen}
           isSettingsOpen={isSettingsOpen}
@@ -439,6 +480,13 @@ export const App: React.FC = () => {
         onToggleForceDarkMode={handleToggleForceDarkMode}
         showBookmarksBar={showBookmarksBar}
         onToggleBookmarksBar={handleToggleBookmarksBar}
+        devModeEnabled={devModeEnabled}
+        onToggleDevMode={async () => {
+          const next = !devModeEnabled;
+          setDevModeEnabled(next);
+          await window.browserApi.updateSettings({ devModeEnabled: next });
+        }}
+        onOpenUpdateLog={() => setIsUpdateLogOpen(true)}
       />
 
       <DownloadsFlyout
@@ -450,6 +498,12 @@ export const App: React.FC = () => {
           window.browserApi.clearDownloadsHistory?.();
           setDownloads((prev) => prev.filter((d) => d.state === 'progressing'));
         }}
+        language={language}
+      />
+
+      <UpdateLogModal
+        isOpen={isUpdateLogOpen}
+        onClose={() => setIsUpdateLogOpen(false)}
         language={language}
       />
     </div>

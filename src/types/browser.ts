@@ -15,6 +15,10 @@ export interface TabInfo {
   isIncognito?: boolean;
   isSleeping?: boolean;
   lastActiveAt?: number;
+  isPlayingAudio?: boolean;
+  isMuted?: boolean;
+  volume?: number;
+  zoomFactor?: number;
   adBlockStats: {
     blockedCount: number;
     enabled: boolean;
@@ -82,6 +86,8 @@ export interface AppSettings {
   hardwareAcceleration?: boolean;
   tabSleepEnabled?: boolean;
   tabSleepMinutes?: number;
+  devModeEnabled?: boolean;
+  defaultZoom?: number;
   bookmarks?: BookmarkItem[];
   shortcuts?: ShortcutItem[];
 }
@@ -142,6 +148,20 @@ export interface BrowserApi {
   clearDownloadsHistory: () => Promise<void>;
   openDownloadFile: (filePath: string) => Promise<boolean>;
   openDownloadsFolder: () => Promise<void>;
+
+  // Per-Tab Audio & Volume Control
+  setTabVolume: (tabId: string, volume: number) => Promise<void>;
+  toggleTabMute: (tabId: string) => Promise<boolean>;
+
+  // Page Zoom Controls
+  setTabZoom: (tabId: string, zoomFactor: number) => Promise<number>;
+  zoomIn: (tabId: string) => Promise<number>;
+  zoomOut: (tabId: string) => Promise<number>;
+  resetZoom: (tabId: string) => Promise<number>;
+
+  // Developer Mode
+  toggleDevTools: (tabId?: string) => Promise<void>;
+  toggleAppDevTools: () => Promise<void>;
 
   // Event Listeners
   onTabsUpdated: (callback: (tabs: TabInfo[], activeTabId: string) => void) => () => void;

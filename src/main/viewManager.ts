@@ -17,6 +17,10 @@ interface ManagedTab {
   isIncognito?: boolean;
   isSleeping?: boolean;
   lastActiveAt: number;
+  isPlayingAudio: boolean;
+  isMuted: boolean;
+  volume: number;
+  zoomFactor: number;
 }
 
 export const NEW_TAB_URL = 'bocchy://newtab';
@@ -234,6 +238,10 @@ export class ViewManager {
       isIncognito,
       isSleeping: false,
       lastActiveAt: Date.now(),
+      isPlayingAudio: false,
+      isMuted: false,
+      volume: 100,
+      zoomFactor: 1.0,
     };
 
     this.tabs.set(id, tab);
@@ -274,6 +282,34 @@ export class ViewManager {
       if (!isNewTabUrl(tab.url)) {
         tab.isLoading = true;
         this.notifyTabsUpdated();
+      }
+    });
+
+    wc.on('media-started-playing', () => {
+      tab.isPlayingAudio = true;
+      this.notifyTabsUpdated();
+    });
+
+    wc.on('media-paused', () => {
+      tab.isPlayingAudio = false;
+      this.notifyTabsUpdated();
+    });
+
+    wc.on('before-input-event', (event, input) => {
+      if (input.type === 'keyDown') {
+        if (input.key === 'F12' || (input.control && input.shift && (input.key === 'I' || input.key === 'i'))) {
+          event.preventDefault();
+          this.toggleDevTools(tab.id);
+        } else if (input.control && (input.key === '=' || input.key === '+')) {
+          event.preventDefault();
+          this.zoomIn(tab.id);
+        } else if (input.control && input.key === '-') {
+          event.preventDefault();
+          this.zoomOut(tab.id);
+        } else if (input.control && input.key === '0') {
+          event.preventDefault();
+          this.resetZoom(tab.id);
+        }
       }
     });
 
@@ -389,6 +425,16 @@ export class ViewManager {
       if (this.forceDarkMode) {
         this.applyForceDark(wc, true);
       }
+
+      // Re-apply zoom factor
+      if (tab.zoomFactor && tab.zoomFactor !== 1.0) {
+        try {
+          wc.setZoomFactor(tab.zoomFactor);
+        } catch (e) {}
+      }
+
+      // Re-apply volume and mute
+      this.applyVolumeToWebContents(wc, tab.volume, tab.isMuted);
     });
   }
 
@@ -553,6 +599,106 @@ export class ViewManager {
     return this.tabs.get(tabId);
   }
 
+  private applyVolumeToWebContents(wc: any, volume: number, isMuted: boolean) {
+    if (!wc || wc.isDestroyed()) return;
+    try {
+      wc.setAudioMuted(Boolean(isMuted || volume === 0));
+      const volRatio = isMuted ? 0 : Math.max(0, Math.min(1, volume / 100));
+      const script = `
+        (function(v) {
+          window.__bocchy_volume_level__ = v;
+          try {
+            const media = document.querySelectorAll('video, audio');
+            media.forEach(function(m) { m.volume = v; });
+          } catch (e) {}
+          if (!window.__bocchy_volume_hooked__) {
+            window.__bocchy_volume_hooked__ = true;
+            document.addEventListener('play', function(e) {
+              if (e.target && (e.target.tagName === 'VIDEO' || e.target.tagName === 'AUDIO')) {
+                if (typeof window.__bocchy_volume_level__ === 'number') {
+                  e.target.volume = window.__bocchy_volume_level__;
+                }
+              }
+            }, true);
+          }
+        })(${volRatio});
+      `;
+      wc.executeJavaScript(script).catch(() => {});
+    } catch (e) {}
+  }
+
+  public setTabVolume(tabId: string, volume: number) {
+    const tab = this.tabs.get(tabId);
+    if (!tab) return;
+    tab.volume = Math.max(0, Math.min(100, Math.round(volume)));
+    if (tab.volume > 0 && tab.isMuted) {
+      tab.isMuted = false;
+    }
+    if (tab.view && !tab.isSleeping) {
+      this.applyVolumeToWebContents(tab.view.webContents, tab.volume, tab.isMuted);
+    }
+    this.notifyTabsUpdated();
+  }
+
+  public toggleTabMute(tabId: string): boolean {
+    const tab = this.tabs.get(tabId);
+    if (!tab) return false;
+    tab.isMuted = !tab.isMuted;
+    if (tab.view && !tab.isSleeping) {
+      this.applyVolumeToWebContents(tab.view.webContents, tab.volume, tab.isMuted);
+    }
+    this.notifyTabsUpdated();
+    return tab.isMuted;
+  }
+
+  public setTabZoom(tabId: string, zoomFactor: number): number {
+    const tab = this.tabs.get(tabId);
+    if (!tab) return 1.0;
+    const clamped = Math.max(0.25, Math.min(5.0, Number(zoomFactor.toFixed(2))));
+    tab.zoomFactor = clamped;
+    if (tab.view && !tab.isSleeping) {
+      try {
+        tab.view.webContents.setZoomFactor(clamped);
+      } catch (e) {}
+    }
+    this.notifyTabsUpdated();
+    return clamped;
+  }
+
+  public zoomIn(tabId: string): number {
+    const tab = this.tabs.get(tabId);
+    if (!tab) return 1.0;
+    const current = tab.zoomFactor || 1.0;
+    const next = Math.min(5.0, current + 0.1);
+    return this.setTabZoom(tabId, next);
+  }
+
+  public zoomOut(tabId: string): number {
+    const tab = this.tabs.get(tabId);
+    if (!tab) return 1.0;
+    const current = tab.zoomFactor || 1.0;
+    const next = Math.max(0.25, current - 0.1);
+    return this.setTabZoom(tabId, next);
+  }
+
+  public resetZoom(tabId: string): number {
+    return this.setTabZoom(tabId, 1.0);
+  }
+
+  public toggleDevTools(tabId?: string) {
+    const targetId = tabId || this.activeTabId;
+    if (!targetId) return;
+    const tab = this.tabs.get(targetId);
+    if (tab && tab.view && !tab.isSleeping) {
+      const wc = tab.view.webContents;
+      if (wc.isDevToolsOpened()) {
+        wc.closeDevTools();
+      } else {
+        wc.openDevTools({ mode: 'right' });
+      }
+    }
+  }
+
   public notifyTabsUpdated() {
     if (this.mainWindow.isDestroyed()) return;
 
@@ -567,6 +713,10 @@ export class ViewManager {
       isIncognito: t.isIncognito,
       isSleeping: t.isSleeping,
       lastActiveAt: t.lastActiveAt,
+      isPlayingAudio: t.isPlayingAudio,
+      isMuted: t.isMuted,
+      volume: t.volume,
+      zoomFactor: t.zoomFactor,
       adBlockStats: this.adblocker.getStats(t.id),
     }));
 
