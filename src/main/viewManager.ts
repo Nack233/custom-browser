@@ -469,7 +469,7 @@ export class ViewManager {
     this.contextMenuManager.attachToWebContents(wc, tab.id, tab.isIncognito);
 
     // 3. Side mouse buttons (Mouse 4 = Back, Mouse 5 = Forward)
-    wc.on('app-command', (event, cmd) => {
+    (wc as any).on('app-command', (event: any, cmd: any) => {
       if (cmd === 'browser-backward') {
         event.preventDefault();
         this.goBack(tab.id);

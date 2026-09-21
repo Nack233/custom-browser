@@ -282,7 +282,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                     <Bookmark className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-800">{t.bookmarksBar || 'แถบบุ๊กมาร์ก (Bookmarks Bar)'}</h3>
+                    <h3 className="text-sm font-semibold text-gray-800">{t.bookmarks || 'แถบบุ๊กมาร์ก (Bookmarks Bar)'}</h3>
                     <p className="text-xs text-gray-500 mt-0.5">
                       {language === 'th' ? 'แสดงแถบทางลัดบุ๊กมาร์กใต้ช่อง URL เพื่อง่ายต่อการคลิก' : 'Show bookmarks bar below the address bar'}
                     </p>
@@ -583,7 +583,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                     <Zap className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-800">{t.hardwareAccel || 'การเร่งความเร็วด้วยฮาร์ดแวร์ (GPU Acceleration)'}</h3>
+                    <h3 className="text-sm font-semibold text-gray-800">{t.hardwareAcceleration || 'การเร่งความเร็วด้วยฮาร์ดแวร์ (GPU Acceleration)'}</h3>
                     <p className="text-xs text-gray-500 mt-0.5">
                       {language === 'th'
                         ? 'เปิดการ์ดจอเพื่อเรนเดอร์วิดีโอ 4K และอนิเมชันลื่นไหล (ปิดหากต้องการแชร์หน้าจอบน Discord แล้วไม่จอดำ)'

@@ -173,11 +173,13 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [refreshRecentlyClosed, activeTabId]);
 
-  // User requested: "ผมไม่อยากให้มันไปแยกพื้นที่หน้าเว็ปมากนั้น"
-  // Keep sidebarWidth = 0 so WebContentsView (YouTube / web page) is NEVER compressed or squished!
+  // Webpage remains 100% full width (sidebarWidth = 0) unless a drawer is explicitly open
   useEffect(() => {
-    window.browserApi.setSidebarWidth(0);
-  }, []);
+    let width = 0;
+    if (isMediaDrawerOpen) width = 400;
+    else if (isUpdateLogOpen) width = 440;
+    window.browserApi.setSidebarWidth(width);
+  }, [isMediaDrawerOpen, isUpdateLogOpen]);
 
   // Sync TopBar Height when Bookmarks bar is toggled or visible
   useEffect(() => {

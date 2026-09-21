@@ -274,7 +274,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <Bookmark className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-semibold text-gray-200">{t.bookmarksBar || 'Bookmarks Bar'}</h4>
+                  <h4 className="text-xs font-semibold text-gray-200">{t.bookmarks || 'Bookmarks Bar'}</h4>
                   <p className="text-[11px] text-gray-400 mt-0.5 leading-relaxed">
                     {language === 'th'
                       ? 'แสดงแถบลิงก์บุ๊กมาร์กใต้ช่อง URL เพื่อง่ายต่อการคลิก'

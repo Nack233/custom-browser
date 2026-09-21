@@ -17,6 +17,7 @@ import {
   MousePointer,
   Heart,
   Maximize2,
+  Settings,
 } from 'lucide-react';
 
 interface UpdateLogModalProps {
