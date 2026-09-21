@@ -49,6 +49,8 @@ const api: BrowserApi = {
   clearDownloadsHistory: () => ipcRenderer.invoke('downloads:clear'),
   openDownloadFile: (filePath: string) => ipcRenderer.invoke('downloads:open-file', filePath),
   openDownloadsFolder: () => ipcRenderer.invoke('downloads:open-folder'),
+  toggleDownloadsFlyout: (topOffset?: number) => ipcRenderer.invoke('downloads:toggle-flyout', topOffset),
+  closeDownloadsFlyout: () => ipcRenderer.invoke('downloads:close-flyout'),
 
   // Per-Tab Audio & Volume Control
   setTabVolume: (tabId: string, volume: number) => ipcRenderer.invoke('tab:set-volume', tabId, volume),
@@ -117,6 +119,14 @@ const api: BrowserApi = {
     ipcRenderer.on('download:complete', handler);
     return () => {
       ipcRenderer.removeListener('download:complete', handler);
+    };
+  },
+
+  onDownloadsFlyoutStateChanged: (callback: (isOpen: boolean) => void) => {
+    const handler = (_event: any, isOpen: boolean) => callback(isOpen);
+    ipcRenderer.on('downloads:flyout-state-changed', handler);
+    return () => {
+      ipcRenderer.removeListener('downloads:flyout-state-changed', handler);
     };
   },
 

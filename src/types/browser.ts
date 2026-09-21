@@ -149,6 +149,8 @@ export interface BrowserApi {
   clearDownloadsHistory: () => Promise<void>;
   openDownloadFile: (filePath: string) => Promise<boolean>;
   openDownloadsFolder: () => Promise<void>;
+  toggleDownloadsFlyout: (topOffset?: number) => Promise<boolean>;
+  closeDownloadsFlyout: () => Promise<void>;
 
   // Per-Tab Audio & Volume Control
   setTabVolume: (tabId: string, volume: number) => Promise<void>;
@@ -178,6 +180,7 @@ export interface BrowserApi {
   onZipProgress: (callback: (data: { current: number; total: number; percent: number; status: string }) => void) => () => void;
   onDownloadProgress: (callback: (item: DownloadItemInfo) => void) => () => void;
   onDownloadComplete: (callback: (item: DownloadItemInfo) => void) => () => void;
+  onDownloadsFlyoutStateChanged: (callback: (isOpen: boolean) => void) => () => void;
   onHtmlFullScreenChange: (callback: (isFullScreen: boolean) => void) => () => void;
 }
 

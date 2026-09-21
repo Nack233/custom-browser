@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import type { DownloadItemInfo } from '../../types/browser';
 import {
   Download,
@@ -14,6 +14,7 @@ import {
   Music,
   ExternalLink,
   Folder,
+  Sparkles,
 } from 'lucide-react';
 import type { Language } from '../i18n';
 import { translations } from '../i18n';
@@ -26,6 +27,7 @@ interface DownloadsFlyoutProps {
   onClearHistory: () => void;
   language: Language;
   topOffset?: number;
+  isFloatingModal?: boolean;
 }
 
 export const DownloadsFlyout: React.FC<DownloadsFlyoutProps> = ({
@@ -36,10 +38,21 @@ export const DownloadsFlyout: React.FC<DownloadsFlyoutProps> = ({
   onClearHistory,
   language,
   topOffset = 92,
+  isFloatingModal = false,
 }) => {
   if (!isOpen) return null;
 
   const t = translations[language] || translations.th;
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const formatBytes = (bytes?: number): string => {
     if (!bytes || bytes <= 0) return '0 B';
@@ -108,27 +121,40 @@ export const DownloadsFlyout: React.FC<DownloadsFlyoutProps> = ({
     window.browserApi.openDownloadsFolder();
   };
 
+  const containerClass = isFloatingModal
+    ? 'w-full h-full max-h-[510px] flex flex-col bg-[#18181f]/95 backdrop-blur-2xl border border-pink-500/30 rounded-2xl shadow-2xl overflow-hidden select-none animate-in fade-in zoom-in-95 duration-150'
+    : 'fixed right-3 z-50 w-[380px] max-h-[75vh] flex flex-col bg-[#18181f]/95 backdrop-blur-2xl border border-pink-500/30 rounded-2xl shadow-2xl overflow-hidden select-none animate-in fade-in slide-in-from-top-2 duration-150';
+
   return (
     <div
-      className="fixed right-0 bottom-0 w-[360px] bg-[#16161c] border-l border-[#25252e] z-50 flex flex-col shadow-2xl select-none animate-in slide-in-from-right duration-200"
-      style={{ top: `${topOffset}px` }}
+      className={containerClass}
+      style={isFloatingModal ? undefined : { top: `${topOffset + 4}px` }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#25252e] bg-[#121217]">
-        <div className="flex items-center space-x-2">
-          <Download className="w-4 h-4 text-blue-400" />
-          <h2 className="text-sm font-semibold text-gray-100">{t.downloadsFlyoutTitle || 'Downloads'}</h2>
-          {downloads.filter((d) => d.state === 'progressing').length > 0 && (
-            <span className="px-1.5 py-0.5 text-[10px] font-mono bg-blue-500/20 text-blue-300 rounded-full animate-pulse">
-              {downloads.filter((d) => d.state === 'progressing').length}
-            </span>
-          )}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#2a2a38] bg-[#14141a]/70">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-7 h-7 rounded-lg bg-pink-500/20 border border-pink-500/30 flex items-center justify-center text-pink-400 shadow-xs">
+            <Download className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center space-x-2">
+              <h2 className="text-xs font-bold text-gray-100">{t.downloadsFlyoutTitle || 'Downloads'}</h2>
+              {downloads.filter((d) => d.state === 'progressing').length > 0 && (
+                <span className="px-1.5 py-0.2 text-[9px] font-mono font-bold bg-pink-500/25 text-pink-300 border border-pink-500/40 rounded-full animate-pulse">
+                  {downloads.filter((d) => d.state === 'progressing').length} active
+                </span>
+              )}
+            </div>
+            <p className="text-[10px] text-gray-400">
+              {language === 'th' ? 'การดาวน์โหลดและประวัติไฟล์' : 'Downloads & File History'}
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center space-x-1">
           <button
             onClick={handleOpenDownloadsFolder}
-            className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-[#22222d] transition-colors"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
             title={t.openDownloadsFolder || 'Open downloads folder'}
           >
             <Folder className="w-4 h-4" />
@@ -136,7 +162,7 @@ export const DownloadsFlyout: React.FC<DownloadsFlyoutProps> = ({
           {downloads.some((d) => d.state !== 'progressing') && (
             <button
               onClick={onClearHistory}
-              className="p-1.5 rounded-md text-gray-400 hover:text-rose-400 hover:bg-[#22222d] transition-colors"
+              className="p-1.5 rounded-lg text-gray-400 hover:text-rose-400 hover:bg-white/10 transition-colors"
               title={t.clearDownloads || 'Clear history'}
             >
               <Trash2 className="w-4 h-4" />
@@ -144,7 +170,7 @@ export const DownloadsFlyout: React.FC<DownloadsFlyoutProps> = ({
           )}
           <button
             onClick={onClose}
-            className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-[#22222d] transition-colors"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -294,12 +320,12 @@ export const DownloadsFlyout: React.FC<DownloadsFlyoutProps> = ({
       </div>
 
       {/* Footer */}
-      <div className="p-3 border-t border-[#25252e] bg-[#121217] flex items-center justify-between">
+      <div className="p-3 border-t border-[#2a2a38] bg-[#14141a]/80 flex items-center justify-between">
         <button
           onClick={handleOpenDownloadsFolder}
-          className="w-full py-1.5 px-3 rounded-lg bg-[#20202a] hover:bg-[#282836] text-gray-300 text-xs font-medium transition-colors flex items-center justify-center space-x-1.5"
+          className="w-full py-1.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white text-xs font-medium transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
         >
-          <FolderOpen className="w-3.5 h-3.5 text-blue-400" />
+          <FolderOpen className="w-3.5 h-3.5 text-pink-400" />
           <span>{t.openDownloadsFolder || 'Open downloads folder'}</span>
         </button>
       </div>

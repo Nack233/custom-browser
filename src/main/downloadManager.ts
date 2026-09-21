@@ -162,14 +162,18 @@ export class DownloadManager {
   }
 
   private notifyDownloadProgress(item: DownloadItemInfo) {
-    if (this.mainWindow && !this.mainWindow.isDestroyed()) {
-      this.mainWindow.webContents.send('download:progress', item);
-    }
+    BrowserWindow.getAllWindows().forEach((win) => {
+      if (!win.isDestroyed()) {
+        win.webContents.send('download:progress', item);
+      }
+    });
   }
 
   private notifyDownloadComplete(item: DownloadItemInfo) {
-    if (this.mainWindow && !this.mainWindow.isDestroyed()) {
-      this.mainWindow.webContents.send('download:complete', item);
-    }
+    BrowserWindow.getAllWindows().forEach((win) => {
+      if (!win.isDestroyed()) {
+        win.webContents.send('download:complete', item);
+      }
+    });
   }
 }

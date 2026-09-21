@@ -14,7 +14,78 @@ import { UpdateLogModal } from './components/UpdateLogModal';
 import { GlobalMediaPanel } from './components/GlobalMediaPanel';
 import type { Language } from './i18n';
 
+const StandaloneDownloadsModal: React.FC = () => {
+  const [downloads, setDownloads] = useState<DownloadItemInfo[]>([]);
+  const [language, setLanguage] = useState<Language>('th');
+
+  useEffect(() => {
+    document.documentElement.style.backgroundColor = 'transparent';
+    document.body.style.backgroundColor = 'transparent';
+    document.body.className = 'bg-transparent overflow-hidden select-none m-0 p-0';
+
+    window.browserApi.getDownloads?.().then((dls) => setDownloads(dls || []));
+    window.browserApi.getSettings?.().then((s) => {
+      if (s?.language) setLanguage(s.language);
+    });
+
+    const unsubsProgress = window.browserApi.onDownloadProgress?.((item) => {
+      setDownloads((prev) => {
+        const idx = prev.findIndex((d) => d.id === item.id);
+        if (idx >= 0) {
+          const next = [...prev];
+          next[idx] = item;
+          return next;
+        }
+        return [item, ...prev];
+      });
+    });
+
+    const unsubsComplete = window.browserApi.onDownloadComplete?.((item) => {
+      setDownloads((prev) => {
+        const idx = prev.findIndex((d) => d.id === item.id);
+        if (idx >= 0) {
+          const next = [...prev];
+          next[idx] = item;
+          return next;
+        }
+        return [item, ...prev];
+      });
+    });
+
+    return () => {
+      unsubsProgress?.();
+      unsubsComplete?.();
+    };
+  }, []);
+
+  return (
+    <div className="w-full h-full p-2 bg-transparent select-none overflow-hidden">
+      <DownloadsFlyout
+        isOpen={true}
+        isFloatingModal={true}
+        onClose={() => window.browserApi.closeDownloadsFlyout?.()}
+        downloads={downloads}
+        onCancelDownload={(id) => window.browserApi.cancelDownload?.(id)}
+        onClearHistory={() => {
+          window.browserApi.clearDownloadsHistory?.();
+          setDownloads((prev) => prev.filter((d) => d.state === 'progressing'));
+        }}
+        language={language}
+        topOffset={0}
+      />
+    </div>
+  );
+};
+
 export const App: React.FC = () => {
+  const isDownloadModalMode =
+    typeof window !== 'undefined' &&
+    (window.location.search.includes('modal=downloads') || window.location.hash.includes('modal=downloads'));
+
+  if (isDownloadModalMode) {
+    return <StandaloneDownloadsModal />;
+  }
+
   const [tabs, setTabs] = useState<TabInfo[]>([]);
   const [activeTabId, setActiveTabId] = useState<string>('');
   const [tabMediaMap, setTabMediaMap] = useState<Record<string, MediaItem[]>>({});
@@ -44,6 +115,7 @@ export const App: React.FC = () => {
     setIsSettingsOpen(false);
     setIsUpdateLogOpen(false);
     setIsDownloadsOpen(false);
+    window.browserApi.closeDownloadsFlyout?.();
     setIsShieldOpen(false);
     setIsMediaDrawerOpen(false);
     setIsMoreOptionsOpen(false);
@@ -135,12 +207,18 @@ export const App: React.FC = () => {
       });
     });
 
-    // 5. Listen for HTML5 Fullscreen (YouTube/Video Fullscreen)
+    // 5. Listen for Downloads flyout state (open/close)
+    const unbindDlFlyout = window.browserApi.onDownloadsFlyoutStateChanged?.((isOpen) => {
+      setIsDownloadsOpen(isOpen);
+    });
+
+    // 6. Listen for HTML5 Fullscreen (YouTube/Video Fullscreen)
     const unbindFs = window.browserApi.onHtmlFullScreenChange?.((isFs) => {
       setIsHtmlFullScreen(isFs);
       if (isFs) {
         setIsMediaControlOpen(false);
         setIsDownloadsOpen(false);
+        window.browserApi.closeDownloadsFlyout?.();
         setIsShieldOpen(false);
         setIsMediaDrawerOpen(false);
         setIsMoreOptionsOpen(false);
@@ -154,6 +232,7 @@ export const App: React.FC = () => {
       unbindAdBlock();
       unbindDlProgress?.();
       unbindDlComplete?.();
+      unbindDlFlyout?.();
       unbindFs?.();
     };
   }, [refreshRecentlyClosed]);
@@ -197,6 +276,7 @@ export const App: React.FC = () => {
       else if (e.key === 'Escape') {
         setIsMediaControlOpen(false);
         setIsDownloadsOpen(false);
+        window.browserApi.closeDownloadsFlyout?.();
         setIsShieldOpen(false);
         setIsMediaDrawerOpen(false);
         setIsMoreOptionsOpen(false);
@@ -209,17 +289,16 @@ export const App: React.FC = () => {
   }, [refreshRecentlyClosed, activeTabId]);
 
   // Webpage remains 100% full width (sidebarWidth = 0) unless a drawer is explicitly open
-  // This completely solves elements falling behind native WebContentsView (e.g. Google / YouTube)
+  // Downloads flyout now floats natively as a child window without compressing or squeezing the webpage!
   useEffect(() => {
     let width = 0;
     if (isMediaDrawerOpen) width = 420;
-    else if (isDownloadsOpen) width = 360;
     else if (isShieldOpen) width = 340;
     else if (isMoreOptionsOpen) width = 300;
     else if (isUpdateLogOpen) width = 440;
     else if (isMediaControlOpen) width = 440;
     window.browserApi.setSidebarWidth(width);
-  }, [isMediaDrawerOpen, isDownloadsOpen, isShieldOpen, isMoreOptionsOpen, isUpdateLogOpen, isMediaControlOpen]);
+  }, [isMediaDrawerOpen, isShieldOpen, isMoreOptionsOpen, isUpdateLogOpen, isMediaControlOpen]);
 
   // Sync TopBar Height when Bookmarks bar is toggled or visible
   useEffect(() => {
@@ -417,7 +496,7 @@ export const App: React.FC = () => {
             setIsShieldOpen(!isShieldOpen);
             setIsMediaDrawerOpen(false);
             setIsSettingsOpen(false);
-            setIsDownloadsOpen(false);
+            window.browserApi.closeDownloadsFlyout?.();
             setIsUpdateLogOpen(false);
           }}
           onToggleMediaDrawer={() => {
@@ -425,7 +504,7 @@ export const App: React.FC = () => {
             setIsMediaDrawerOpen(next);
             setIsShieldOpen(false);
             setIsSettingsOpen(false);
-            setIsDownloadsOpen(false);
+            window.browserApi.closeDownloadsFlyout?.();
             setIsUpdateLogOpen(false);
             if (next) {
               handleRefreshScan();
@@ -435,12 +514,13 @@ export const App: React.FC = () => {
             setIsSettingsOpen(!isSettingsOpen);
             setIsShieldOpen(false);
             setIsMediaDrawerOpen(false);
-            setIsDownloadsOpen(false);
+            window.browserApi.closeDownloadsFlyout?.();
             setIsUpdateLogOpen(false);
           }}
           isDownloadsOpen={isDownloadsOpen}
           onToggleDownloads={() => {
-            setIsDownloadsOpen(!isDownloadsOpen);
+            const topOffset = showBookmarksBar && bookmarks.length > 0 ? 124 : 92;
+            window.browserApi.toggleDownloadsFlyout?.(topOffset);
             setIsShieldOpen(false);
             setIsMediaDrawerOpen(false);
             setIsSettingsOpen(false);
@@ -480,7 +560,7 @@ export const App: React.FC = () => {
               setIsShieldOpen(false);
               setIsMediaDrawerOpen(false);
               setIsSettingsOpen(false);
-              setIsDownloadsOpen(false);
+              window.browserApi.closeDownloadsFlyout?.();
               setIsUpdateLogOpen(false);
               setIsMoreOptionsOpen(false);
             }
@@ -576,19 +656,6 @@ export const App: React.FC = () => {
         topOffset={showBookmarksBar && bookmarks.length > 0 ? 124 : 92}
       />
 
-      <DownloadsFlyout
-        isOpen={isDownloadsOpen}
-        onClose={() => setIsDownloadsOpen(false)}
-        downloads={downloads}
-        onCancelDownload={(id) => window.browserApi.cancelDownload?.(id)}
-        onClearHistory={() => {
-          window.browserApi.clearDownloadsHistory?.();
-          setDownloads((prev) => prev.filter((d) => d.state === 'progressing'));
-        }}
-        language={language}
-        topOffset={showBookmarksBar && bookmarks.length > 0 ? 124 : 92}
-      />
-
       <UpdateLogModal
         isOpen={isUpdateLogOpen}
         onClose={() => setIsUpdateLogOpen(false)}
@@ -610,21 +677,22 @@ export const App: React.FC = () => {
         showBookmarksBar={showBookmarksBar}
         onToggleBookmarksBar={handleToggleBookmarksBar}
         onOpenDownloads={() => {
-          setIsDownloadsOpen(true);
+          const topOffset = showBookmarksBar && bookmarks.length > 0 ? 124 : 92;
+          window.browserApi.toggleDownloadsFlyout?.(topOffset);
           setIsShieldOpen(false);
           setIsMediaDrawerOpen(false);
           setIsUpdateLogOpen(false);
         }}
         onOpenShield={() => {
           setIsShieldOpen(true);
-          setIsDownloadsOpen(false);
+          window.browserApi.closeDownloadsFlyout?.();
           setIsMediaDrawerOpen(false);
           setIsUpdateLogOpen(false);
         }}
         onOpenMedia={() => {
           setIsMediaDrawerOpen(true);
           setIsShieldOpen(false);
-          setIsDownloadsOpen(false);
+          window.browserApi.closeDownloadsFlyout?.();
           setIsUpdateLogOpen(false);
         }}
         forceDarkMode={forceDarkMode}
@@ -639,7 +707,7 @@ export const App: React.FC = () => {
           setIsMediaControlOpen(true);
           setIsShieldOpen(false);
           setIsMediaDrawerOpen(false);
-          setIsDownloadsOpen(false);
+          window.browserApi.closeDownloadsFlyout?.();
           setIsUpdateLogOpen(false);
         }}
       />

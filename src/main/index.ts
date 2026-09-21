@@ -17,8 +17,67 @@ let settingsManager: SettingsManager | null = null;
 let downloadManager: DownloadManager | null = null;
 let localeManager: LocaleManager | null = null;
 let windowStateManager: WindowStateManager | null = null;
+let downloadsWindow: BrowserWindow | null = null;
+let cachedTopOffset = 92;
+let lastBlurTime = 0;
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+
+function getOrCreateDownloadsWindow(): BrowserWindow {
+  if (downloadsWindow && !downloadsWindow.isDestroyed()) {
+    return downloadsWindow;
+  }
+
+  downloadsWindow = new BrowserWindow({
+    width: 390,
+    height: 520,
+    parent: mainWindow || undefined,
+    frame: false,
+    transparent: true,
+    hasShadow: true,
+    resizable: false,
+    show: false,
+    skipTaskbar: true,
+    backgroundColor: '#00000000',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+
+  downloadsWindow.on('blur', () => {
+    lastBlurTime = Date.now();
+    if (downloadsWindow && !downloadsWindow.isDestroyed() && downloadsWindow.isVisible()) {
+      downloadsWindow.hide();
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('downloads:flyout-state-changed', false);
+      }
+    }
+  });
+
+  if (isDev) {
+    downloadsWindow.loadURL('http://localhost:5173/?modal=downloads');
+  } else {
+    downloadsWindow.loadFile(path.join(__dirname, '../dist-renderer/index.html'), {
+      search: 'modal=downloads',
+      hash: 'modal=downloads',
+    });
+  }
+
+  return downloadsWindow;
+}
+
+function repositionDownloadsFlyout(topOffset: number = cachedTopOffset) {
+  if (!downloadsWindow || downloadsWindow.isDestroyed() || !mainWindow || mainWindow.isDestroyed()) return;
+  cachedTopOffset = topOffset;
+  const mainBounds = mainWindow.getBounds();
+  const width = 390;
+  const height = 520;
+  const x = mainBounds.x + mainBounds.width - width - 14;
+  const y = mainBounds.y + topOffset + 6;
+  downloadsWindow.setBounds({ x, y, width, height });
+}
 
 // Ignore certificate errors so local dev, corporate proxies, or antivirus SSL inspection don't cause blank white pages
 app.commandLine.appendSwitch('ignore-certificate-errors');
@@ -107,7 +166,30 @@ async function createWindow() {
   // Create initial tab (Bocchy New Tab)
   viewManager.createTab('bocchy://newtab');
 
+  mainWindow.on('move', () => {
+    if (downloadsWindow && !downloadsWindow.isDestroyed() && downloadsWindow.isVisible()) {
+      repositionDownloadsFlyout(cachedTopOffset);
+    }
+  });
+
+  mainWindow.on('resize', () => {
+    if (downloadsWindow && !downloadsWindow.isDestroyed() && downloadsWindow.isVisible()) {
+      repositionDownloadsFlyout(cachedTopOffset);
+    }
+  });
+
+  mainWindow.on('minimize', () => {
+    if (downloadsWindow && !downloadsWindow.isDestroyed() && downloadsWindow.isVisible()) {
+      downloadsWindow.hide();
+      mainWindow?.webContents.send('downloads:flyout-state-changed', false);
+    }
+  });
+
   mainWindow.on('closed', () => {
+    if (downloadsWindow && !downloadsWindow.isDestroyed()) {
+      downloadsWindow.destroy();
+      downloadsWindow = null;
+    }
     mainWindow = null;
   });
 }
@@ -288,6 +370,32 @@ function setupIpc() {
 
   ipcMain.handle('downloads:open-folder', async () => {
     await downloadManager?.openDownloadsFolder();
+  });
+
+  ipcMain.handle('downloads:toggle-flyout', (_event, topOffset?: number) => {
+    const win = getOrCreateDownloadsWindow();
+    if (topOffset) cachedTopOffset = topOffset;
+    const now = Date.now();
+    if (win.isVisible()) {
+      win.hide();
+      mainWindow?.webContents.send('downloads:flyout-state-changed', false);
+      return false;
+    } else if (now - lastBlurTime < 250) {
+      return false;
+    } else {
+      repositionDownloadsFlyout(cachedTopOffset);
+      win.show();
+      win.focus();
+      mainWindow?.webContents.send('downloads:flyout-state-changed', true);
+      return true;
+    }
+  });
+
+  ipcMain.handle('downloads:close-flyout', () => {
+    if (downloadsWindow && !downloadsWindow.isDestroyed()) {
+      downloadsWindow.hide();
+      mainWindow?.webContents.send('downloads:flyout-state-changed', false);
+    }
   });
 
   // Per-Tab Audio & Volume Control
