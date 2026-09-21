@@ -6,6 +6,7 @@ import { ViewManager } from './viewManager';
 import { SettingsManager } from './settingsManager';
 import { DownloadManager } from './downloadManager';
 import { LocaleManager } from './localeManager';
+import { WindowStateManager } from './windowStateManager';
 import { session } from 'electron';
 
 let mainWindow: BrowserWindow | null = null;
@@ -15,6 +16,7 @@ let mediaSniffer: MediaSnifferService | null = null;
 let settingsManager: SettingsManager | null = null;
 let downloadManager: DownloadManager | null = null;
 let localeManager: LocaleManager | null = null;
+let windowStateManager: WindowStateManager | null = null;
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
@@ -23,11 +25,17 @@ app.commandLine.appendSwitch('ignore-certificate-errors');
 app.commandLine.appendSwitch('allow-insecure-localhost', 'true');
 async function createWindow() {
   const iconPath = path.join(app.getAppPath(), 'bocchy.ico');
+  windowStateManager = new WindowStateManager();
+  const savedState = windowStateManager.getValidState();
+
   mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 850,
+    x: savedState.x,
+    y: savedState.y,
+    width: savedState.width,
+    height: savedState.height,
     minWidth: 800,
     minHeight: 600,
+    show: false,
     title: 'Bocchy',
     icon: iconPath,
     titleBarStyle: 'hidden',
@@ -43,6 +51,13 @@ async function createWindow() {
     },
     backgroundColor: '#0f0914',
   });
+
+  windowStateManager.manage(mainWindow);
+
+  if (savedState.isMaximized) {
+    mainWindow.maximize();
+  }
+  mainWindow.show();
 
   // Services
   downloadManager = new DownloadManager();
@@ -306,6 +321,13 @@ function setupIpc() {
       } else {
         mainWindow.webContents.openDevTools({ mode: 'detach' });
       }
+    }
+  });
+
+  // Window State Reset
+  ipcMain.handle('window:reset-size', () => {
+    if (mainWindow && windowStateManager) {
+      windowStateManager.resetToDefault(mainWindow);
     }
   });
 }

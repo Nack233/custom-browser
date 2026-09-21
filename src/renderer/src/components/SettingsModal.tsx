@@ -17,6 +17,7 @@ import {
   Cpu,
   Code2,
   Sparkles,
+  Maximize2,
 } from 'lucide-react';
 
 interface SettingsModalProps {
@@ -421,6 +422,39 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     devModeEnabled ? 'translate-x-4' : 'translate-x-0'
                   }`}
                 />
+              </button>
+            </div>
+
+            {/* Window Size & Position Card */}
+            <div className="p-3.5 rounded-xl bg-[#201326] border border-pink-500/30 flex items-center justify-between">
+              <div className="flex items-start space-x-3 pr-2">
+                <div className="p-2 rounded-lg bg-pink-500/10 text-pink-400 mt-0.5">
+                  <Maximize2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-semibold text-pink-200">
+                    {language === 'th' ? 'จดจำขนาดและตำแหน่งหน้าต่าง' : 'Remember Window Size & Position'}
+                  </h4>
+                  <p className="text-[11px] text-pink-300/70 mt-0.5 leading-relaxed">
+                    {language === 'th'
+                      ? 'บันทึกขนาดหน้าต่าง พิกัด และสถานะขยายเต็มจอ (Maximize) อัตโนมัติเมื่อเปิดปิดเบราว์เซอร์'
+                      : 'Automatically remembers window dimensions, coordinates, and maximized state across sessions'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={async () => {
+                  await window.browserApi.resetWindowSize();
+                  setToastMessage(
+                    language === 'th'
+                      ? '🔄 รีเซ็ตขนาดหน้าต่างเป็นค่าเริ่มต้น 1280x850 แล้ว'
+                      : '🔄 Window size reset to default 1280x850'
+                  );
+                  setTimeout(() => setToastMessage(null), 3000);
+                }}
+                className="px-2.5 py-1 rounded-lg text-xs font-medium bg-pink-500/20 text-pink-300 hover:bg-pink-500/30 border border-pink-500/40 transition-colors flex-shrink-0"
+              >
+                {language === 'th' ? 'รีเซ็ตค่าเริ่มต้น' : 'Reset Default'}
               </button>
             </div>
 

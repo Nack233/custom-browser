@@ -163,6 +163,9 @@ export interface BrowserApi {
   toggleDevTools: (tabId?: string) => Promise<void>;
   toggleAppDevTools: () => Promise<void>;
 
+  // Window State
+  resetWindowSize: () => Promise<void>;
+
   // Event Listeners
   onTabsUpdated: (callback: (tabs: TabInfo[], activeTabId: string) => void) => () => void;
   onMediaFound: (callback: (tabId: string, item: MediaItem) => void) => () => void;

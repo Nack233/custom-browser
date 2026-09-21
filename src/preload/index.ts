@@ -63,6 +63,9 @@ const api: BrowserApi = {
   toggleDevTools: (tabId?: string) => ipcRenderer.invoke('dev:toggle-devtools', tabId),
   toggleAppDevTools: () => ipcRenderer.invoke('dev:toggle-app-devtools'),
 
+  // Window State
+  resetWindowSize: () => ipcRenderer.invoke('window:reset-size'),
+
   onTabsUpdated: (callback: (tabs: TabInfo[], activeTabId: string) => void) => {
     const handler = (_event: any, tabs: TabInfo[], activeTabId: string) => callback(tabs, activeTabId);
     ipcRenderer.on('tabs:updated', handler);

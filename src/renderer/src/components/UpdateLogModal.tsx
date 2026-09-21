@@ -16,6 +16,7 @@ import {
   Globe,
   MousePointer,
   Heart,
+  Maximize2,
 } from 'lucide-react';
 
 interface UpdateLogModalProps {
@@ -156,6 +157,18 @@ export const UpdateLogModal: React.FC<UpdateLogModalProps> = ({
                 {isTh
                   ? 'ปรับแต่งหน้า New Tab และแถบนำทางด้านบน (TabBar, NavigationBar, BookmarksBar) ใหม่หมดจด ด้วยโทนสีชมพูพาสเทลเอฟเฟกต์แก้วใส (Glass Transparent), แสงนีออนละมุน และฟอนต์โมเดิร์น Plus Jakarta Sans'
                   : 'Transformed New Tab page and top bars (TabBar, NavigationBar, BookmarksBar) with pastel pink glass transparent aesthetics, ambient neon glow, and modern Plus Jakarta Sans typography.'}
+              </p>
+            </div>
+
+            <div className="p-3 bg-[#221024] border border-pink-500/30 rounded-xl space-y-1">
+              <div className="flex items-center space-x-1.5 text-pink-300 font-semibold text-[11px]">
+                <Maximize2 className="w-3.5 h-3.5 flex-shrink-0 text-pink-400" />
+                <span>{isTh ? 'ระบบจดจำขนาดหน้าต่าง (Window State Persistence)' : 'Window State Persistence'}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 leading-relaxed pl-5">
+                {isTh
+                  ? 'จำขนาดหน้าต่าง พิกัด x, y และสถานะขยายเต็มจอ (Maximize) อัตโนมัติเมื่อเปิดปิดเบราว์เซอร์ พร้อมระบบป้องกันหน้าต่างหลุดจอกรณีถอดจอแยก และปุ่มรีเซ็ตขนาดใน Settings'
+                  : 'Automatically remembers window dimensions, screen position, and maximized state across restarts with multi-monitor safety checks and a quick reset button.'}
               </p>
             </div>
           </div>
