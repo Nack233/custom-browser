@@ -39,7 +39,7 @@ export class ViewManager {
   private mediaSniffer: MediaSnifferService;
   private settingsManager?: SettingsManager;
   private downloadManager?: DownloadManager;
-  private topBarHeight = 78; // Height in pixels reserved for React Top Bar & Tabs
+  private topBarHeight = 92; // Height in pixels reserved for React Top Bar & Tabs (44px TabBar + 48px Nav)
   private sidebarWidth = 0; // Dynamic sidebar/drawer width on the right
   private forceDarkMode = false;
   private recentlyClosedTabs: RecentlyClosedItem[] = [];

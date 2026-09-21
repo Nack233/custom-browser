@@ -40,16 +40,16 @@ async function createWindow() {
     icon: iconPath,
     titleBarStyle: 'hidden',
     titleBarOverlay: {
-      color: '#150d1b',
-      symbolColor: '#f472b6',
-      height: 38,
+      color: '#ff6599',
+      symbolColor: '#ffffff',
+      height: 44,
     },
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
     },
-    backgroundColor: '#0f0914',
+    backgroundColor: '#fff0f6',
   });
 
   windowStateManager.manage(mainWindow);

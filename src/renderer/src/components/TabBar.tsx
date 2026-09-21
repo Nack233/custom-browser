@@ -43,7 +43,7 @@ export const TabBar: React.FC<TabBarProps> = ({
 
   return (
     <div
-      className="flex items-center h-10 px-2.5 bg-gradient-to-r from-[#170e1e]/95 via-[#140a18]/90 to-[#120816]/95 backdrop-blur-2xl select-none border-b border-pink-500/15"
+      className="flex items-end h-11 px-2 bg-[#ff6599] select-none border-b border-pink-400/30"
       style={{ WebkitAppRegion: 'drag' } as any}
       onMouseDown={(e) => {
         if (e.button === 1 && e.target === e.currentTarget) {
@@ -59,7 +59,7 @@ export const TabBar: React.FC<TabBarProps> = ({
       }}
     >
       <div
-        className="flex items-center space-x-1.5 flex-1 overflow-x-auto no-scrollbar pr-36"
+        className="flex items-end space-x-1 flex-1 overflow-x-auto no-scrollbar pr-36 h-full"
         onMouseDown={(e) => {
           if (e.button === 1 && e.target === e.currentTarget) {
             e.preventDefault();
@@ -73,7 +73,7 @@ export const TabBar: React.FC<TabBarProps> = ({
           }
         }}
       >
-        {tabs.map((tab) => {
+        {tabs.map((tab, index) => {
           const isActive = tab.id === activeTabId;
           const isIncognito = tab.isIncognito;
           const isSleeping = tab.isSleeping;
@@ -82,127 +82,134 @@ export const TabBar: React.FC<TabBarProps> = ({
           const volume = tab.volume !== undefined ? tab.volume : 100;
           const hasAudioActivity = isPlayingAudio || isMuted;
 
-          return (
-            <div
-              key={tab.id}
-              onClick={() => onSelectTab(tab.id)}
-              onMouseDown={(e) => {
-                if (e.button === 1) {
-                  // Middle-click closes the tab
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onCloseTab(tab.id);
-                }
-              }}
-              style={{ WebkitAppRegion: 'no-drag' } as any}
-              className={`group relative flex items-center h-8 px-3 max-w-[220px] min-w-[130px] rounded-xl text-xs cursor-pointer transition-all duration-200 ${
-                isSleeping ? 'opacity-60 hover:opacity-100' : ''
-              } ${
-                isIncognito
-                  ? isActive
-                    ? 'bg-gradient-to-r from-purple-900/40 to-pink-900/30 text-purple-200 border border-purple-400/40 shadow-[0_0_15px_rgba(168,85,247,0.25)] font-medium'
-                    : 'text-purple-300/70 hover:bg-purple-950/30 hover:text-purple-100 border border-purple-500/20'
-                  : isActive
-                  ? 'bg-gradient-to-r from-pink-500/25 via-rose-500/20 to-pink-500/25 text-pink-50 border border-pink-400/45 shadow-[0_0_16px_rgba(244,114,182,0.25)] font-semibold'
-                  : 'text-pink-200/60 hover:bg-pink-500/10 hover:text-pink-100 border border-transparent hover:border-pink-500/25'
-              }`}
-              title={
-                isSleeping
-                  ? `[💤 จำศีลประหยัด RAM] ${tab.title}\nคลิกเพื่อปลุกการทำงาน | คลิกเมาส์กลางเพื่อปิด`
-                  : `${tab.title}\n(คลิกเมาส์กลางที่แท็บเพื่อปิด)`
-              }
-            >
-              {/* Cute Active Sparkle Indicator */}
-              {isActive && !isIncognito && (
-                <span className="w-1.5 h-1.5 rounded-full bg-pink-400 shadow-[0_0_8px_#f472b6] mr-1.5 flex-shrink-0 animate-pulse" />
-              )}
+          const nextTab = tabs[index + 1];
+          const isNextActive = nextTab && nextTab.id === activeTabId;
+          const showDivider = !isActive && !isNextActive && index < tabs.length - 1;
 
-              {/* Favicon / Incognito / Loading / Sleep */}
-              <div className="mr-2 flex-shrink-0 flex items-center justify-center w-4 h-4">
-                {tab.isLoading ? (
-                  <Loader2
-                    className={`w-3.5 h-3.5 animate-spin ${
-                      isIncognito ? 'text-purple-400' : 'text-pink-400'
-                    }`}
-                  />
-                ) : isSleeping ? (
-                  <span className="text-xs select-none">💤</span>
-                ) : isIncognito ? (
-                  <EyeOff className="w-3.5 h-3.5 text-purple-400" />
-                ) : tab.favicon ? (
-                  <img
-                    src={tab.favicon}
-                    alt=""
-                    className="w-3.5 h-3.5 rounded-md object-contain"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = 'none';
+          return (
+            <React.Fragment key={tab.id}>
+              <div
+                onClick={() => onSelectTab(tab.id)}
+                onMouseDown={(e) => {
+                  if (e.button === 1) {
+                    // Middle-click closes the tab
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onCloseTab(tab.id);
+                  }
+                }}
+                style={{ WebkitAppRegion: 'no-drag' } as any}
+                className={`group relative flex items-center px-3 max-w-[240px] min-w-[130px] text-xs cursor-pointer transition-all duration-150 ${
+                  isSleeping ? 'opacity-70 hover:opacity-100' : ''
+                } ${
+                  isActive
+                    ? 'h-[36px] bg-white text-slate-800 font-semibold rounded-t-lg shadow-[0_-1px_3px_rgba(0,0,0,0.08)] z-10'
+                    : 'h-[32px] mb-1 bg-transparent hover:bg-white/20 text-white font-medium rounded-md'
+                }`}
+                title={
+                  isSleeping
+                    ? `[💤 จำศีลประหยัด RAM] ${tab.title}\nคลิกเพื่อปลุกการทำงาน | คลิกเมาส์กลางเพื่อปิด`
+                    : `${tab.title}\n(คลิกเมาส์กลางที่แท็บเพื่อปิด)`
+                }
+              >
+                {/* Favicon / Incognito / Loading / Sleep */}
+                <div className="mr-2 flex-shrink-0 flex items-center justify-center w-4 h-4">
+                  {tab.isLoading ? (
+                    <Loader2
+                      className={`w-3.5 h-3.5 animate-spin ${
+                        isActive ? 'text-pink-500' : 'text-white'
+                      }`}
+                    />
+                  ) : isSleeping ? (
+                    <span className="text-xs select-none">💤</span>
+                  ) : isIncognito ? (
+                    <EyeOff className={`w-3.5 h-3.5 ${isActive ? 'text-purple-600' : 'text-white/90'}`} />
+                  ) : tab.favicon ? (
+                    <img
+                      src={tab.favicon}
+                      alt=""
+                      className="w-3.5 h-3.5 rounded-sm object-contain"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <Globe className={`w-3.5 h-3.5 ${isActive ? 'text-pink-500/70' : 'text-white/80'}`} />
+                  )}
+                </div>
+
+                {/* Title */}
+                <span className={`truncate flex-1 ${isSleeping ? 'italic opacity-60' : ''}`}>
+                  {tab.title || (tab.isLoading ? 'Loading...' : isIncognito ? 'Incognito' : 'New Tab')}
+                </span>
+
+                {/* Per-Tab Audio Indicator */}
+                {hasAudioActivity && (
+                  <button
+                    type="button"
+                    onClick={(e) => handleToggleMute(e, tab.id)}
+                    onWheel={(e) => {
+                      e.stopPropagation();
+                      const delta = e.deltaY < 0 ? 5 : -5;
+                      handleVolumeChange(tab.id, Math.max(0, Math.min(100, volume + delta)));
                     }}
-                  />
-                ) : (
-                  <Globe className="w-3.5 h-3.5 text-pink-400/60" />
+                    className={`ml-1 px-1.5 py-0.5 rounded transition-all flex items-center justify-center space-x-1 flex-shrink-0 ${
+                      isActive
+                        ? isMuted
+                          ? 'bg-rose-100 text-rose-600 border border-rose-200'
+                          : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                        : isMuted
+                        ? 'bg-black/30 text-rose-200'
+                        : 'bg-black/20 text-emerald-200'
+                    }`}
+                    title={
+                      isMuted
+                        ? 'แท็บนี้ถูกปิดเสียง (คลิกเพื่อเปิดเสียง / เลื่อนล้อเมาส์เพื่อปรับระดับเสียง)'
+                        : `กำลังเล่นเสียง [${volume}%] (คลิกเพื่อ Mute / หมุนล้อเมาส์เพื่อปรับเสียง 0-100%)`
+                    }
+                  >
+                    {isMuted ? (
+                      <VolumeX className="w-3 h-3" />
+                    ) : (
+                      <Volume2 className="w-3 h-3 animate-pulse" />
+                    )}
+                    <span className="text-[10px] font-mono font-bold leading-none">
+                      {isMuted ? 'Mute' : `${volume}%`}
+                    </span>
+                  </button>
                 )}
+
+                {/* Close Button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCloseTab(tab.id);
+                  }}
+                  className={`ml-1.5 p-1 rounded transition-colors ${
+                    isActive
+                      ? 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'
+                      : 'text-white/60 hover:text-white hover:bg-white/20'
+                  }`}
+                  title="Close Tab (หรือคลิกเมาส์กลางที่แท็บ)"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
 
-              {/* Title */}
-              <span className={`truncate flex-1 font-medium ${isSleeping ? 'italic text-pink-300/40' : ''}`}>
-                {tab.title || (tab.isLoading ? 'Loading...' : isIncognito ? 'Incognito' : 'New Tab')}
-              </span>
-
-              {/* Per-Tab Audio Indicator with Scroll Wheel Volume & Click Mute */}
-              {hasAudioActivity && (
-                <button
-                  type="button"
-                  onClick={(e) => handleToggleMute(e, tab.id)}
-                  onWheel={(e) => {
-                    e.stopPropagation();
-                    const delta = e.deltaY < 0 ? 5 : -5;
-                    handleVolumeChange(tab.id, Math.max(0, Math.min(100, volume + delta)));
-                  }}
-                  className={`ml-1 px-1.5 py-0.5 rounded-lg transition-all flex items-center justify-center space-x-1 flex-shrink-0 ${
-                    isMuted
-                      ? 'bg-rose-500/25 text-rose-300 hover:bg-rose-500/35 border border-rose-500/40 shadow-sm'
-                      : 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/35'
-                  }`}
-                  title={
-                    isMuted
-                      ? 'แท็บนี้ถูกปิดเสียง (คลิกเพื่อเปิดเสียง / เลื่อนล้อเมาส์เพื่อปรับระดับเสียง)'
-                      : `กำลังเล่นเสียง [${volume}%] (คลิกเพื่อ Mute / หมุนล้อเมาส์เพื่อปรับเสียง 0-100%)`
-                  }
-                >
-                  {isMuted ? (
-                    <VolumeX className="w-3 h-3 text-rose-400" />
-                  ) : (
-                    <Volume2 className="w-3 h-3 animate-pulse text-emerald-400" />
-                  )}
-                  <span className="text-[10px] font-mono font-bold leading-none">
-                    {isMuted ? 'Mute' : `${volume}%`}
-                  </span>
-                </button>
+              {/* Vertical subtle divider between inactive tabs */}
+              {showDivider && (
+                <div className="w-[1px] h-3.5 bg-white/25 self-center mb-1 flex-shrink-0" />
               )}
-
-              {/* Close Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCloseTab(tab.id);
-                }}
-                className={`ml-1.5 p-0.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-pink-500/30 hover:text-white text-pink-300/60 transition-all ${
-                  isActive ? 'opacity-80' : ''
-                }`}
-                title="Close Tab (หรือคลิกเมาส์กลางที่แท็บ)"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
+            </React.Fragment>
           );
         })}
 
-        {/* Action Controls: New Tab, Incognito Tab, Restore Closed Tab */}
-        <div className="flex items-center space-x-1 ml-1" style={{ WebkitAppRegion: 'no-drag' } as any}>
+        {/* Action Controls: New Tab (+), Incognito Tab, Restore Closed Tab */}
+        <div className="flex items-center space-x-0.5 ml-1 mb-1.5" style={{ WebkitAppRegion: 'no-drag' } as any}>
           {/* New Normal Tab */}
           <button
             onClick={onNewTab}
-            className="p-1.5 rounded-xl text-pink-300 hover:text-pink-50 hover:bg-pink-500/20 hover:border-pink-400/30 border border-transparent transition-all shadow-sm"
+            className="w-7 h-7 rounded-md text-white hover:bg-white/20 flex items-center justify-center transition-colors"
             title="Open New Tab (Ctrl+T)"
           >
             <Plus className="w-4 h-4" />
@@ -211,7 +218,7 @@ export const TabBar: React.FC<TabBarProps> = ({
           {/* New Incognito Tab */}
           <button
             onClick={onNewIncognitoTab}
-            className="p-1.5 rounded-xl text-purple-300/80 hover:text-purple-100 hover:bg-purple-500/20 hover:border-purple-400/30 border border-transparent transition-all shadow-sm"
+            className="w-7 h-7 rounded-md text-white/80 hover:text-white hover:bg-white/20 flex items-center justify-center transition-colors"
             title="New Incognito Tab (Ctrl+Shift+N)"
           >
             <EyeOff className="w-3.5 h-3.5" />
@@ -221,7 +228,7 @@ export const TabBar: React.FC<TabBarProps> = ({
           <button
             onClick={onRestoreClosedTab}
             disabled={!canRestoreClosed}
-            className="p-1.5 rounded-xl text-emerald-300/80 hover:text-emerald-100 hover:bg-emerald-500/20 hover:border-emerald-400/30 border border-transparent disabled:opacity-20 disabled:hover:bg-transparent transition-all"
+            className="w-7 h-7 rounded-md text-white/80 hover:text-white hover:bg-white/20 disabled:opacity-30 disabled:hover:bg-transparent flex items-center justify-center transition-colors"
             title={canRestoreClosed ? 'Reopen Closed Tab (Ctrl+Shift+T)' : 'No recently closed tabs'}
           >
             <RotateCcw className="w-3.5 h-3.5" />

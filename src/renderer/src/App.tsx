@@ -190,7 +190,7 @@ export const App: React.FC = () => {
   // Sync TopBar Height when Bookmarks bar is toggled or visible
   useEffect(() => {
     const hasBookmarksBar = showBookmarksBar && bookmarks.length > 0;
-    const height = hasBookmarksBar ? 108 : 78;
+    const height = hasBookmarksBar ? 124 : 92;
     window.browserApi.setTopBarHeight(height);
   }, [showBookmarksBar, bookmarks.length]);
 
@@ -350,9 +350,9 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-[#0f0914] text-pink-50 overflow-hidden select-none">
-      {/* Top Bar Container: TabBar (40px) + NavigationBar (38px) + optional BookmarksBar (30px) */}
-      <header className="flex-shrink-0 z-30 shadow-lg shadow-pink-950/20">
+    <div className="flex flex-col h-screen w-screen bg-[#fff0f6] text-gray-900 overflow-hidden select-none">
+      {/* Top Bar Container: TabBar (44px) + NavigationBar (48px) + optional BookmarksBar (32px) */}
+      <header className="flex-shrink-0 z-30 shadow-sm">
         <TabBar
           tabs={tabs}
           activeTabId={activeTabId}
@@ -505,7 +505,7 @@ export const App: React.FC = () => {
           setIsSettingsOpen(false);
           setIsUpdateLogOpen(true);
         }}
-        topOffset={showBookmarksBar && bookmarks.length > 0 ? 108 : 78}
+        topOffset={showBookmarksBar && bookmarks.length > 0 ? 124 : 92}
       />
 
       <DownloadsFlyout
@@ -524,7 +524,7 @@ export const App: React.FC = () => {
         isOpen={isUpdateLogOpen}
         onClose={() => setIsUpdateLogOpen(false)}
         language={language}
-        topOffset={showBookmarksBar && bookmarks.length > 0 ? 108 : 78}
+        topOffset={showBookmarksBar && bookmarks.length > 0 ? 124 : 92}
       />
     </div>
   );
