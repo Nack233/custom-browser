@@ -14,6 +14,7 @@ import {
   Calendar,
   Wrench,
   Globe,
+  MousePointer,
 } from 'lucide-react';
 
 interface UpdateLogModalProps {
@@ -130,6 +131,18 @@ export const UpdateLogModal: React.FC<UpdateLogModalProps> = ({
                 {isTh
                   ? 'เมื่อเปลี่ยนภาษาใน Settings ระบบจะส่ง Accept-Language และตั้งค่าคุกกี้ภาษา (PREF) ไปยังเว็บไซต์ เช่น YouTube และ Google โดยตรง ทำให้หน้าเว็บแสดงผล UI เป็นภาษาไทยหรืออังกฤษตามที่ต้องการทันที'
                   : 'Changing browser language now injects Accept-Language and PREF cookies into external sites like YouTube and Google, automatically rendering their UI in Thai or English.'}
+              </p>
+            </div>
+
+            <div className="p-3 bg-[#1c1a24] border border-cyan-500/25 rounded-xl space-y-1">
+              <div className="flex items-center space-x-1.5 text-cyan-300 font-semibold text-[11px]">
+                <MousePointer className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>{isTh ? 'ฟังก์ชันเมาส์และเมนูคลิกขวา (Mouse Shortcuts & Context Menu)' : 'Mouse Shortcuts & Rich Context Menu'}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 leading-relaxed pl-5">
+                {isTh
+                  ? 'รองรับคลิกเมาส์กลางเปิดแท็บใหม่จากลิงก์/YouTube, คลิกเมาส์กลางที่หัวแท็บเพื่อปิดแท็บ, เมนูคลิกขวาเต็มรูปแบบ (Back, Forward, Refresh, Save as, Print, Inspect element) และปุ่มข้างเมาส์ Back/Forward'
+                  : 'Added middle-click link to new tab (YouTube/web), middle-click tab to close, rich right-click context menu (Back, Forward, Refresh, Inspect, Print), and mouse side buttons.'}
               </p>
             </div>
           </div>

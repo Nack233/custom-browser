@@ -5,6 +5,7 @@ import { MediaSnifferService } from './mediaSniffer';
 import { SettingsManager } from './settingsManager';
 import type { DownloadManager } from './downloadManager';
 import type { LocaleManager } from './localeManager';
+import { ContextMenuManager } from './contextMenu';
 
 interface ManagedTab {
   id: string;
@@ -45,6 +46,7 @@ export class ViewManager {
   private sleepCheckInterval: NodeJS.Timeout | null = null;
   private localeManager?: LocaleManager;
   private currentLanguage: 'th' | 'en' = 'th';
+  private contextMenuManager: ContextMenuManager;
 
   constructor(
     mainWindow: BrowserWindow,
@@ -61,6 +63,29 @@ export class ViewManager {
     this.downloadManager = downloadManager;
     this.localeManager = localeManager;
     this.currentLanguage = settingsManager?.getSettings().language || 'th';
+
+    this.contextMenuManager = new ContextMenuManager(
+      this.mainWindow,
+      {
+        createTab: (url, incognito) => this.createTab(url, incognito),
+        goBack: (tabId) => this.goBack(tabId),
+        goForward: (tabId) => this.goForward(tabId),
+        reload: (tabId) => this.reload(tabId),
+        canGoBack: (tabId) => {
+          const tab = this.tabs.get(tabId);
+          return tab ? tab.canGoBack : false;
+        },
+        canGoForward: (tabId) => {
+          const tab = this.tabs.get(tabId);
+          return tab ? tab.canGoForward : false;
+        },
+        getTabUrl: (tabId) => {
+          const tab = this.tabs.get(tabId);
+          return tab ? tab.url : '';
+        },
+      },
+      this.currentLanguage
+    );
 
     this.setupWindowEvents();
     this.startSleepMonitor();
@@ -121,6 +146,16 @@ export class ViewManager {
   private setupWindowEvents() {
     this.mainWindow.on('resize', () => {
       this.updateActiveViewBounds();
+    });
+
+    this.mainWindow.on('app-command', (event, cmd) => {
+      if (cmd === 'browser-backward' && this.activeTabId) {
+        event.preventDefault();
+        this.goBack(this.activeTabId);
+      } else if (cmd === 'browser-forward' && this.activeTabId) {
+        event.preventDefault();
+        this.goForward(this.activeTabId);
+      }
     });
   }
 
@@ -218,7 +253,7 @@ export class ViewManager {
     });
   }
 
-  public createTab(initialUrl = NEW_TAB_URL, isIncognito = false): string {
+  public createTab(initialUrl = NEW_TAB_URL, isIncognito = false, switchImmediately = true): string {
     let view: WebContentsView;
     if (isIncognito) {
       const partition = `incognito_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
@@ -263,8 +298,12 @@ export class ViewManager {
       this.navigate(id, initialUrl);
     }
 
-    // Switch to this new tab
-    this.switchTab(id);
+    // Switch to this new tab or notify
+    if (switchImmediately) {
+      this.switchTab(id);
+    } else {
+      this.notifyTabsUpdated();
+    }
 
     return id;
   }
@@ -383,15 +422,40 @@ export class ViewManager {
       }
     });
 
-    // 1. Block unwanted popup windows/tabs from sites (window.open clickjacking)
+    // 1. Handle window.open, middle-click links, and target="_blank"
     wc.setWindowOpenHandler((details) => {
-      console.log(`[Popup Blocked] [${tab.id}] ${details.url}`);
-      this.adblocker.recordBlocked(tab.id, details.url);
-      this.notifyTabsUpdated();
+      // Check if this URL is a redirect/pop-under ad
+      if (this.adblocker.isRedirectAd(details.url, tab.url)) {
+        console.log(`[Popup Blocked] [${tab.id}] ${details.url}`);
+        this.adblocker.recordBlocked(tab.id, details.url);
+        this.notifyTabsUpdated();
+        return { action: 'deny' };
+      }
+
+      // If legitimate link, open as a Bocchy tab!
+      if (details.url && details.url !== 'about:blank') {
+        const isBackground = details.disposition === 'background-tab';
+        console.log(`[Open New Tab from Link] [${tab.id}] disposition=${details.disposition} url=${details.url}`);
+        this.createTab(details.url, tab.isIncognito, !isBackground);
+      }
       return { action: 'deny' };
     });
 
-    // 2. Block unwanted redirects / page changes to gambling or ad domains
+    // 2. Attach Rich Context Menu (Right Click)
+    this.contextMenuManager.attachToWebContents(wc, tab.id, tab.isIncognito);
+
+    // 3. Side mouse buttons (Mouse 4 = Back, Mouse 5 = Forward)
+    wc.on('app-command', (event, cmd) => {
+      if (cmd === 'browser-backward') {
+        event.preventDefault();
+        this.goBack(tab.id);
+      } else if (cmd === 'browser-forward') {
+        event.preventDefault();
+        this.goForward(tab.id);
+      }
+    });
+
+    // 4. Block unwanted redirects / page changes to gambling or ad domains
     wc.on('will-navigate', (event, targetUrl) => {
       if (this.adblocker.isRedirectAd(targetUrl, tab.url)) {
         console.log(`[Redirect Blocked] [${tab.id}] prevented navigation to: ${targetUrl}`);
@@ -410,7 +474,7 @@ export class ViewManager {
       }
     });
 
-    // 3. Inject cosmetic styles to hide banner ads and gambling buttons directly on page
+    // 5. Inject cosmetic styles to hide banner ads and gambling buttons directly on page
     wc.on('did-finish-load', () => {
       if (this.adblocker.isBlockGifAds()) {
         wc.insertCSS(`
@@ -452,6 +516,25 @@ export class ViewManager {
       if (this.localeManager) {
         wc.executeJavaScript(this.localeManager.getInjectionScript()).catch(() => {});
       }
+
+      // Inject middle-click handler for all <a> tags to reliably open links in new tab
+      wc.executeJavaScript(`
+        (function() {
+          if (window.__bocchy_auxclick_registered__) return;
+          window.__bocchy_auxclick_registered__ = true;
+          window.addEventListener('auxclick', function(e) {
+            if (e.button === 1) {
+              var target = e.target;
+              var anchor = target && target.closest ? target.closest('a') : null;
+              if (anchor && anchor.href && !anchor.href.startsWith('javascript:')) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.open(anchor.href, '_blank');
+              }
+            }
+          }, true);
+        })();
+      `).catch(() => {});
     });
   }
 
@@ -718,6 +801,7 @@ export class ViewManager {
 
   public async applyLanguage(lang: 'th' | 'en') {
     this.currentLanguage = lang;
+    this.contextMenuManager.setLanguage(lang);
     if (this.localeManager) {
       await this.localeManager.setLanguage(lang);
     }

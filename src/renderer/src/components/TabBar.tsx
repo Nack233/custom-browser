@@ -45,8 +45,34 @@ export const TabBar: React.FC<TabBarProps> = ({
     <div
       className="flex items-center h-10 px-2 bg-[#121214] select-none border-b border-[#222226]"
       style={{ WebkitAppRegion: 'drag' } as any}
+      onMouseDown={(e) => {
+        if (e.button === 1 && e.target === e.currentTarget) {
+          e.preventDefault();
+          onNewTab();
+        }
+      }}
+      onDoubleClick={(e) => {
+        if (e.target === e.currentTarget) {
+          e.preventDefault();
+          onNewTab();
+        }
+      }}
     >
-      <div className="flex items-center space-x-1 flex-1 overflow-x-auto no-scrollbar pr-36">
+      <div
+        className="flex items-center space-x-1 flex-1 overflow-x-auto no-scrollbar pr-36"
+        onMouseDown={(e) => {
+          if (e.button === 1 && e.target === e.currentTarget) {
+            e.preventDefault();
+            onNewTab();
+          }
+        }}
+        onDoubleClick={(e) => {
+          if (e.target === e.currentTarget) {
+            e.preventDefault();
+            onNewTab();
+          }
+        }}
+      >
         {tabs.map((tab) => {
           const isActive = tab.id === activeTabId;
           const isIncognito = tab.isIncognito;
@@ -60,6 +86,14 @@ export const TabBar: React.FC<TabBarProps> = ({
             <div
               key={tab.id}
               onClick={() => onSelectTab(tab.id)}
+              onMouseDown={(e) => {
+                if (e.button === 1) {
+                  // Middle-click closes the tab
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onCloseTab(tab.id);
+                }
+              }}
               style={{ WebkitAppRegion: 'no-drag' } as any}
               className={`group relative flex items-center h-8 px-3 max-w-[220px] min-w-[130px] rounded-lg text-xs cursor-pointer transition-all duration-150 ${
                 isSleeping ? 'opacity-60 hover:opacity-100' : ''
@@ -74,8 +108,8 @@ export const TabBar: React.FC<TabBarProps> = ({
               }`}
               title={
                 isSleeping
-                  ? `[💤 จำศีลประหยัด RAM] ${tab.title}\nคลิกเพื่อปลุกการทำงาน`
-                  : tab.title
+                  ? `[💤 จำศีลประหยัด RAM] ${tab.title}\nคลิกเพื่อปลุกการทำงาน | คลิกเมาส์กลางเพื่อปิด`
+                  : `${tab.title}\n(คลิกเมาส์กลางที่แท็บเพื่อปิด)`
               }
             >
               {/* Favicon / Incognito / Loading / Sleep */}
@@ -150,7 +184,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                 className={`ml-1 p-0.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-[#32323c] transition-opacity ${
                   isActive ? 'opacity-70' : ''
                 }`}
-                title="Close Tab"
+                title="Close Tab (หรือคลิกเมาส์กลางที่แท็บ)"
               >
                 <X className="w-3 h-3 text-gray-400 hover:text-white" />
               </button>
