@@ -29,6 +29,7 @@ interface MediaDrawerProps {
   onPickSection: () => void;
   onOpenInTab: (url: string) => void;
   isScanning: boolean;
+  topOffset?: number;
 }
 
 export const MediaDrawer: React.FC<MediaDrawerProps> = ({
@@ -39,6 +40,7 @@ export const MediaDrawer: React.FC<MediaDrawerProps> = ({
   onPickSection,
   onOpenInTab,
   isScanning,
+  topOffset = 92,
 }) => {
   const [filter, setFilter] = useState<'all' | 'video' | 'image'>('all');
   const [hideGifs, setHideGifs] = useState(false);
@@ -213,7 +215,10 @@ export const MediaDrawer: React.FC<MediaDrawerProps> = ({
   const allSelected = filteredItems.length > 0 && selectedIds.size === filteredItems.length;
 
   return (
-    <div className="fixed top-[78px] right-0 bottom-0 w-[420px] bg-[#16161a] border-l border-[#25252b] z-50 flex flex-col shadow-2xl animate-in slide-in-from-right duration-200 select-none">
+    <div
+      className="fixed right-0 bottom-0 w-[420px] bg-[#16161a] border-l border-[#25252b] z-50 flex flex-col shadow-2xl animate-in slide-in-from-right duration-200 select-none"
+      style={{ top: `${topOffset}px` }}
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#25252b] bg-[#131317]">
         <div className="flex items-center space-x-2">

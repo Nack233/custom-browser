@@ -9,6 +9,7 @@ interface AdShieldModalProps {
   onToggleAdBlock: () => void;
   onToggleBlockGifAds: () => void;
   onToggleBlockRedirects: () => void;
+  topOffset?: number;
 }
 
 export const AdShieldModal: React.FC<AdShieldModalProps> = ({
@@ -18,6 +19,7 @@ export const AdShieldModal: React.FC<AdShieldModalProps> = ({
   onToggleAdBlock,
   onToggleBlockGifAds,
   onToggleBlockRedirects,
+  topOffset = 92,
 }) => {
   if (!isOpen) return null;
 
@@ -28,7 +30,10 @@ export const AdShieldModal: React.FC<AdShieldModalProps> = ({
   const recentBlocked = activeTab?.adBlockStats?.recentBlocked ?? [];
 
   return (
-    <div className="fixed top-[78px] right-0 bottom-0 w-[340px] bg-[#16161a] border-l border-[#25252b] z-50 flex flex-col shadow-2xl animate-in slide-in-from-right duration-200 select-none">
+    <div
+      className="fixed right-0 bottom-0 w-[340px] bg-[#16161a] border-l border-[#25252b] z-50 flex flex-col shadow-2xl animate-in slide-in-from-right duration-200 select-none"
+      style={{ top: `${topOffset}px` }}
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#25252b]">
         <div className="flex items-center space-x-2">

@@ -25,6 +25,7 @@ interface DownloadsFlyoutProps {
   onCancelDownload: (id: string) => void;
   onClearHistory: () => void;
   language: Language;
+  topOffset?: number;
 }
 
 export const DownloadsFlyout: React.FC<DownloadsFlyoutProps> = ({
@@ -34,6 +35,7 @@ export const DownloadsFlyout: React.FC<DownloadsFlyoutProps> = ({
   onCancelDownload,
   onClearHistory,
   language,
+  topOffset = 92,
 }) => {
   if (!isOpen) return null;
 
@@ -107,7 +109,10 @@ export const DownloadsFlyout: React.FC<DownloadsFlyoutProps> = ({
   };
 
   return (
-    <div className="fixed top-[78px] right-0 bottom-0 w-[360px] bg-[#16161c] border-l border-[#25252e] z-50 flex flex-col shadow-2xl select-none animate-in slide-in-from-right duration-200">
+    <div
+      className="fixed right-0 bottom-0 w-[360px] bg-[#16161c] border-l border-[#25252e] z-50 flex flex-col shadow-2xl select-none animate-in slide-in-from-right duration-200"
+      style={{ top: `${topOffset}px` }}
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#25252e] bg-[#121217]">
         <div className="flex items-center space-x-2">

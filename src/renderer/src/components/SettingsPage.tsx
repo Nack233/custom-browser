@@ -19,6 +19,14 @@ import {
   Shield,
   Clock,
   ExternalLink,
+  Calendar,
+  Wrench,
+  MousePointer,
+  Volume2,
+  ZoomIn,
+  Heart,
+  Film,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface SettingsPageProps {
@@ -31,6 +39,7 @@ interface SettingsPageProps {
   devModeEnabled: boolean;
   onToggleDevMode: () => void;
   onOpenUpdateLog: () => void;
+  initialSection?: 'general' | 'language' | 'dns' | 'performance' | 'about' | 'updates';
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({
@@ -43,8 +52,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   devModeEnabled,
   onToggleDevMode,
   onOpenUpdateLog,
+  initialSection,
 }) => {
-  const [activeSection, setActiveSection] = useState<'general' | 'language' | 'dns' | 'performance' | 'about'>('general');
+  const [activeSection, setActiveSection] = useState<'general' | 'language' | 'dns' | 'performance' | 'about' | 'updates'>(
+    initialSection || 'general'
+  );
+
+  useEffect(() => {
+    if (initialSection) {
+      setActiveSection(initialSection);
+    }
+  }, [initialSection]);
   const [dnsProvider, setDnsProvider] = useState<AppSettings['dnsProvider']>('cloudflare');
   const [customDnsUrl, setCustomDnsUrl] = useState('');
   const [hardwareAcceleration, setHardwareAcceleration] = useState(true);
@@ -224,6 +242,27 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             >
               <Info className="w-4 h-4" />
               <span>{language === 'th' ? 'เกี่ยวกับ Bocchy' : 'About Bocchy'}</span>
+            </button>
+
+            <button
+              onClick={() => setActiveSection('updates')}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
+                activeSection === 'updates'
+                  ? 'bg-pink-500 text-white font-semibold shadow-xs'
+                  : 'text-gray-650 hover:bg-pink-100/60 hover:text-gray-900'
+              }`}
+            >
+              <div className="flex items-center space-x-3">
+                <Sparkles className="w-4 h-4 text-pink-500" />
+                <span>{language === 'th' ? 'ประวัติการอัปเดต' : 'Update Log'}</span>
+              </div>
+              <span
+                className={`px-1.5 py-0.5 text-[9px] font-mono font-bold rounded ${
+                  activeSection === 'updates' ? 'bg-white/25 text-white' : 'bg-pink-100 text-pink-600'
+                }`}
+              >
+                v1.2.0
+              </span>
             </button>
           </nav>
         </div>
@@ -655,8 +694,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
               <div className="flex space-x-3 pt-2">
                 <button
-                  onClick={onOpenUpdateLog}
-                  className="px-4 py-2 rounded-xl bg-pink-100 hover:bg-pink-200 text-pink-700 text-xs font-bold transition-all shadow-xs flex items-center space-x-1.5"
+                  onClick={() => setActiveSection('updates')}
+                  className="px-4 py-2 rounded-xl bg-pink-100 hover:bg-pink-200 text-pink-700 text-xs font-bold transition-all shadow-xs flex items-center space-x-1.5 cursor-pointer"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-pink-600" />
                   <span>{language === 'th' ? 'ดูประวัติการอัปเดต (Update Log)' : 'View Changelog'}</span>
@@ -672,6 +711,234 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                   <span>GitHub Repository</span>
                 </a>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* SECTION 6: UPDATE LOG (FULL PAGE) */}
+        {activeSection === 'updates' && (
+          <div className="space-y-6 animate-in fade-in duration-150 pb-12">
+            <div>
+              <div className="flex items-center space-x-2">
+                <h1 className="text-xl font-bold text-gray-900">
+                  {language === 'th' ? 'ประวัติการอัปเดต (Update Log)' : 'Changelog & Updates'}
+                </h1>
+                <span className="px-2.5 py-0.5 text-xs font-bold font-mono rounded-full bg-pink-500 text-white shadow-xs">
+                  v1.2.0
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                {language === 'th'
+                  ? 'รายละเอียดการปรับปรุง ฟีเจอร์ใหม่ และการแก้ปัญหาทั้งหมดของเบราว์เซอร์ Bocchy'
+                  : 'Complete release notes, new features, and improvements in Bocchy Browser'}
+              </p>
+            </div>
+
+            {/* VERSION 1.2.0 */}
+            <div className="p-5 bg-white rounded-3xl border border-pink-200 shadow-xs space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-pink-100">
+                <div className="flex items-center space-x-2.5">
+                  <span className="text-base font-bold text-pink-600 font-mono">v1.2.0</span>
+                  <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-pink-100 text-pink-700">
+                    {language === 'th' ? 'เวอร์ชันล่าสุด (Latest Major)' : 'Latest Major'}
+                  </span>
+                </div>
+                <div className="flex items-center text-gray-400 text-xs space-x-1.5 font-medium">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>2026-09-21</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                <div className="p-4 bg-pink-50/50 rounded-2xl border border-pink-200/80 space-y-1.5">
+                  <div className="flex items-center space-x-2 text-pink-700 font-bold text-xs">
+                    <Settings className="w-4 h-4 text-pink-600 flex-shrink-0" />
+                    <span>{language === 'th' ? 'หน้า Settings แบบเต็มแท็บ (bocchy://settings)' : 'Dedicated Settings Tab'}</span>
+                  </div>
+                  <p className="text-xs text-gray-600 leading-relaxed pl-6">
+                    {language === 'th'
+                      ? 'แยกหน้าการตั้งค่าออกจาก Drawer ด้านข้างมาเป็นแท็บเฉพาะของตัวเอง สะอาดตา สบายใจ และไม่บีบพื้นที่หน้าเว็บอีกต่อไป'
+                      : 'Settings is now a full, dedicated tab (bocchy://settings) with clean navigation and zero webpage squishing.'}
+                  </p>
+                </div>
+
+                <div className="p-4 bg-pink-50/50 rounded-2xl border border-pink-200/80 space-y-1.5">
+                  <div className="flex items-center space-x-2 text-pink-700 font-bold text-xs">
+                    <Sparkles className="w-4 h-4 text-pink-600 flex-shrink-0" />
+                    <span>{language === 'th' ? 'เมนูลอยสไตล์ Edge (...) & Zero Squishing' : 'Edge-Style (...) Menu & Zero Squishing'}</span>
+                  </div>
+                  <p className="text-xs text-gray-600 leading-relaxed pl-6">
+                    {language === 'th'
+                      ? 'เพิ่มปุ่ม ... มุมขวาบน รวมคำสั่งลัด ซูม แท็บใหม่ โหมดมืด บุ๊กมาร์ก โดยหน้าเว็บคงความกว้าง 100% เสมอ'
+                      : 'Added Edge-style ... options menu with zoom, new tab, bookmarks, dark mode, keeping webpage at 100% full width.'}
+                  </p>
+                </div>
+
+                <div className="p-4 bg-pink-50/50 rounded-2xl border border-pink-200/80 space-y-1.5">
+                  <div className="flex items-center space-x-2 text-pink-700 font-bold text-xs">
+                    <ShieldCheck className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+                    <span>{language === 'th' ? 'แก้ไขแผงลอยไม่ให้หล่นไปอยู่หลังหน้าเว็บ' : 'Drawer Spacing Fix (Never Hidden Behind Web)'}</span>
+                  </div>
+                  <p className="text-xs text-gray-600 leading-relaxed pl-6">
+                    {language === 'th'
+                      ? 'ปรับระบบแผงด้านข้าง (ดาวน์โหลด, AdShield, มีเดีย) ให้หน้าเว็บหลบอย่างพอดีเฉพาะตอนเปิดใช้งาน หมดปัญหาแผงตกไปอยู่หลัง Google / YouTube'
+                      : 'Proper spacing for Downloads, Shield, and Media flyouts so they are never covered by native WebContentsView.'}
+                  </p>
+                </div>
+
+                <div className="p-4 bg-pink-50/50 rounded-2xl border border-pink-200/80 space-y-1.5">
+                  <div className="flex items-center space-x-2 text-pink-700 font-bold text-xs">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                    <span>{language === 'th' ? 'ระบบ Error Boundary ป้องกันหน้าจอหาย' : 'Crash Guard & Error Boundary'}</span>
+                  </div>
+                  <p className="text-xs text-gray-600 leading-relaxed pl-6">
+                    {language === 'th'
+                      ? 'เพิ่มระบบดักจับข้อผิดพลาดระดับคอมโพเนนต์ ป้องกันไม่ให้แอปแครชกลายเป็นจอว่างสีชมพู พร้อมกู้คืนการทำงานได้ทันที'
+                      : 'Integrated Error Boundary preventing pink screen unmounts, keeping browser tabs and views resilient.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* VERSION 1.1.1 HOTFIX */}
+            <div className="p-5 bg-white rounded-3xl border border-pink-200 shadow-xs space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-pink-100">
+                <div className="flex items-center space-x-2.5">
+                  <span className="text-base font-bold text-rose-500 font-mono">v1.1.1</span>
+                  <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-rose-100 text-rose-700">
+                    Hotfix
+                  </span>
+                </div>
+                <div className="flex items-center text-gray-400 text-xs space-x-1.5 font-medium">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>2026-09-21</span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-start space-x-3 p-3 rounded-2xl bg-gray-50/70 border border-gray-200/60">
+                  <Wrench className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-800">
+                      {language === 'th' ? 'Inline Zoom Stepper [-] 100% [+]' : 'Inline Zoom Stepper'}
+                    </h4>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {language === 'th'
+                        ? 'ปรับตัวควบคุมการซูมเป็นปุ่มในตัวบน Navigation Bar หมดปัญหาหน้าต่างซูมหล่นไปอยู่หลังวิดีโอ YouTube'
+                        : 'Integrated zoom stepper directly on the navbar, eliminating popup layering issues.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3 p-3 rounded-2xl bg-gray-50/70 border border-gray-200/60">
+                  <Volume2 className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-800">
+                      {language === 'th' ? 'Scroll Wheel ปรับเสียงที่หัวแท็บ' : 'Scroll Wheel Tab Volume'}
+                    </h4>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {language === 'th'
+                        ? 'หมุนลูกกลิ้งเมาส์บนไอคอนลำโพงเพื่อเพิ่ม-ลดเสียงของแต่ละแท็บได้ทันที 0% - 100%'
+                        : 'Use mouse scroll wheel on the speaker icon of each tab to adjust individual audio volume.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3 p-3 rounded-2xl bg-gray-50/70 border border-gray-200/60">
+                  <Globe className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-800">
+                      {language === 'th' ? 'Web Localization (ไทย / อังกฤษ ใน YouTube & Google)' : 'Web Localization'}
+                    </h4>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {language === 'th'
+                        ? 'เมื่อเปลี่ยนภาษาใน Settings ระบบจะส่ง Accept-Language และตั้งคุกกี้ภาษา ทำให้หน้าเว็บภายนอกแสดงผล UI เป็นภาษาที่เลือกทันที'
+                        : 'Language preference automatically localizes external sites like YouTube and Google into Thai or English.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3 p-3 rounded-2xl bg-gray-50/70 border border-gray-200/60">
+                  <MousePointer className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-800">
+                      {language === 'th' ? 'ฟังก์ชันเมาส์ & Rich Context Menu' : 'Mouse Shortcuts & Context Menu'}
+                    </h4>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {language === 'th'
+                        ? 'คลิกเมาส์กลางเปิดแท็บใหม่บนลิงก์, คลิกเมาส์กลางปิดแท็บ, เมนูคลิกขวาฉบับเต็ม และรองรับปุ่มเดินหน้า/ถอยหลังด้านข้างเมาส์'
+                        : 'Middle-click link for new tab, middle-click tab to close, rich right-click context menu, and mouse side buttons.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3 p-3 rounded-2xl bg-gray-50/70 border border-gray-200/60">
+                  <Maximize2 className="w-4 h-4 text-indigo-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-800">
+                      {language === 'th' ? 'ระบบจดจำขนาดและตำแหน่งหน้าต่าง (Window State Persistence)' : 'Window State Persistence'}
+                    </h4>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {language === 'th'
+                        ? 'จดจำขนาด พิกัด และสถานะขยายเต็มจออัตโนมัติ เปิดแอพครั้งใดจะได้ขนาดเดิมเสมอ พร้อมระบบกันหน้าต่างหลุดจอ'
+                        : 'Remembers window dimensions, position, and maximize state across restarts.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* VERSION 1.1.0 */}
+            <div className="p-5 bg-white rounded-3xl border border-pink-200 shadow-xs space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-pink-100">
+                <div className="flex items-center space-x-2.5">
+                  <span className="text-base font-bold text-purple-600 font-mono">v1.1.0</span>
+                  <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-purple-100 text-purple-700">
+                    Feature Release
+                  </span>
+                </div>
+                <div className="flex items-center text-gray-400 text-xs space-x-1.5 font-medium">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>2026-09-21</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                <div className="p-3.5 rounded-2xl bg-gray-50/70 border border-gray-200/60 space-y-1">
+                  <h4 className="text-xs font-bold text-gray-800">🛠️ Developer Mode & DevTools</h4>
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    {language === 'th' ? 'โหมดนักพัฒนา F12 พร้อมสลับเปิด/ปิดได้ใน Settings' : 'Developer mode with F12 inspect support'}
+                  </p>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-gray-50/70 border border-gray-200/60 space-y-1">
+                  <h4 className="text-xs font-bold text-gray-800">🛡️ Network AdBlocker</h4>
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    {language === 'th' ? 'บล็อกโฆษณา แบนเนอร์ และแทร็กเกอร์ล่วงหน้าในระดับ Network' : 'Network-level ad and tracker blocker'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* VERSION 1.0.0 */}
+            <div className="p-5 bg-white rounded-3xl border border-pink-200 shadow-xs space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-pink-100">
+                <div className="flex items-center space-x-2.5">
+                  <span className="text-base font-bold text-pink-600 font-mono">v1.0.0</span>
+                  <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-pink-100 text-pink-700">
+                    Initial Release
+                  </span>
+                </div>
+                <div className="flex items-center text-gray-400 text-xs space-x-1.5 font-medium">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>2026-09-20</span>
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-600 leading-relaxed">
+                {language === 'th'
+                  ? 'เปิดตัว Bocchy Custom Browser เวอร์ชันแรก ดีไซน์โทนสีชมพูพาสเทลน่ารัก ระบบแท็บความเร็วสูง พร้อมฟังก์ชันตรวจจับและดาวน์โหลดมีเดีย (Media Extractor)'
+                  : 'First release of Bocchy Browser featuring cute pastel theme, fast tab engine, and media extractor.'}
+              </p>
             </div>
           </div>
         )}

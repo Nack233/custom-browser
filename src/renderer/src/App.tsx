@@ -34,6 +34,18 @@ export const App: React.FC = () => {
   const [isUpdateLogOpen, setIsUpdateLogOpen] = useState(false);
   const [devModeEnabled, setDevModeEnabled] = useState(false);
   const [isMoreOptionsOpen, setIsMoreOptionsOpen] = useState(false);
+  const [settingsSection, setSettingsSection] = useState<'general' | 'language' | 'dns' | 'performance' | 'about' | 'updates'>('general');
+
+  const handleOpenSettings = async (section: 'general' | 'language' | 'dns' | 'performance' | 'about' | 'updates' = 'general') => {
+    setSettingsSection(section);
+    setIsSettingsOpen(false);
+    setIsUpdateLogOpen(false);
+    setIsDownloadsOpen(false);
+    setIsShieldOpen(false);
+    setIsMediaDrawerOpen(false);
+    setIsMoreOptionsOpen(false);
+    await window.browserApi.openSettingsTab();
+  };
 
   // Refresh recently closed tabs list
   const refreshRecentlyClosed = useCallback(async () => {
@@ -174,12 +186,16 @@ export const App: React.FC = () => {
   }, [refreshRecentlyClosed, activeTabId]);
 
   // Webpage remains 100% full width (sidebarWidth = 0) unless a drawer is explicitly open
+  // This completely solves elements falling behind native WebContentsView (e.g. Google / YouTube)
   useEffect(() => {
     let width = 0;
-    if (isMediaDrawerOpen) width = 400;
+    if (isMediaDrawerOpen) width = 420;
+    else if (isDownloadsOpen) width = 360;
+    else if (isShieldOpen) width = 340;
+    else if (isMoreOptionsOpen) width = 300;
     else if (isUpdateLogOpen) width = 440;
     window.browserApi.setSidebarWidth(width);
-  }, [isMediaDrawerOpen, isUpdateLogOpen]);
+  }, [isMediaDrawerOpen, isDownloadsOpen, isShieldOpen, isMoreOptionsOpen, isUpdateLogOpen]);
 
   // Sync TopBar Height when Bookmarks bar is toggled or visible
   useEffect(() => {
@@ -404,16 +420,7 @@ export const App: React.FC = () => {
           onToggleBookmark={handleToggleBookmark}
           onToggleForceDarkMode={handleToggleForceDarkMode}
           onToggleBookmarksBar={handleToggleBookmarksBar}
-          onToggleUpdateLog={() => {
-            const next = !isUpdateLogOpen;
-            setIsUpdateLogOpen(next);
-            if (next) {
-              setIsShieldOpen(false);
-              setIsMediaDrawerOpen(false);
-              setIsSettingsOpen(false);
-              setIsDownloadsOpen(false);
-            }
-          }}
+          onToggleUpdateLog={() => handleOpenSettings('updates')}
           onToggleDevTools={() => {
             if (activeTabId) window.browserApi.toggleDevTools(activeTabId);
           }}
@@ -432,7 +439,7 @@ export const App: React.FC = () => {
           isMediaDrawerOpen={isMediaDrawerOpen}
           isShieldOpen={isShieldOpen}
           isSettingsOpen={isSettingsOpen}
-          onOpenSettingsTab={() => window.browserApi.openSettingsTab()}
+          onOpenSettingsTab={() => handleOpenSettings('general')}
           isMoreOptionsOpen={isMoreOptionsOpen}
           onToggleMoreOptions={() => setIsMoreOptionsOpen(!isMoreOptionsOpen)}
         />
@@ -465,7 +472,8 @@ export const App: React.FC = () => {
               setDevModeEnabled(next);
               await window.browserApi.updateSettings({ devModeEnabled: next });
             }}
-            onOpenUpdateLog={() => setIsUpdateLogOpen(true)}
+            initialSection={settingsSection}
+            onOpenUpdateLog={() => setSettingsSection('updates')}
           />
         ) : isNewTabPage ? (
           <NewTabPage
@@ -490,6 +498,7 @@ export const App: React.FC = () => {
         onToggleAdBlock={handleToggleAdBlock}
         onToggleBlockGifAds={handleToggleBlockGifAds}
         onToggleBlockRedirects={handleToggleBlockRedirects}
+        topOffset={showBookmarksBar && bookmarks.length > 0 ? 124 : 92}
       />
 
       <MediaDrawer
@@ -500,6 +509,7 @@ export const App: React.FC = () => {
         onPickSection={handlePickSection}
         onOpenInTab={handleNavigate}
         isScanning={isScanning}
+        topOffset={showBookmarksBar && bookmarks.length > 0 ? 124 : 92}
       />
 
       <SettingsModal
@@ -517,10 +527,7 @@ export const App: React.FC = () => {
           setDevModeEnabled(next);
           await window.browserApi.updateSettings({ devModeEnabled: next });
         }}
-        onOpenUpdateLog={() => {
-          setIsSettingsOpen(false);
-          setIsUpdateLogOpen(true);
-        }}
+        onOpenUpdateLog={() => handleOpenSettings('updates')}
         topOffset={showBookmarksBar && bookmarks.length > 0 ? 124 : 92}
       />
 
@@ -534,6 +541,7 @@ export const App: React.FC = () => {
           setDownloads((prev) => prev.filter((d) => d.state === 'progressing'));
         }}
         language={language}
+        topOffset={showBookmarksBar && bookmarks.length > 0 ? 124 : 92}
       />
 
       <UpdateLogModal
@@ -578,13 +586,8 @@ export const App: React.FC = () => {
         onToggleForceDarkMode={handleToggleForceDarkMode}
         devModeEnabled={devModeEnabled}
         onToggleDevTools={() => activeTabId && window.browserApi.toggleDevTools(activeTabId)}
-        onOpenSettings={() => window.browserApi.openSettingsTab()}
-        onOpenUpdateLog={() => {
-          setIsUpdateLogOpen(true);
-          setIsDownloadsOpen(false);
-          setIsShieldOpen(false);
-          setIsMediaDrawerOpen(false);
-        }}
+        onOpenSettings={() => handleOpenSettings('general')}
+        onOpenUpdateLog={() => handleOpenSettings('updates')}
         onRestoreClosedTab={handleRestoreClosedTab}
         canRestoreClosed={recentlyClosed.length > 0}
       />
