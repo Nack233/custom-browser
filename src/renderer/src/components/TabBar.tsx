@@ -9,6 +9,7 @@ import {
   RotateCcw,
   Volume2,
   VolumeX,
+  Settings,
 } from 'lucide-react';
 
 interface TabBarProps {
@@ -124,6 +125,8 @@ export const TabBar: React.FC<TabBarProps> = ({
                     <span className="text-xs select-none">💤</span>
                   ) : isIncognito ? (
                     <EyeOff className={`w-3.5 h-3.5 ${isActive ? 'text-purple-600' : 'text-white/90'}`} />
+                  ) : tab.url?.includes('settings') ? (
+                    <Settings className={`w-3.5 h-3.5 ${isActive ? 'text-pink-600' : 'text-white/90'}`} />
                   ) : tab.favicon ? (
                     <img
                       src={tab.favicon}

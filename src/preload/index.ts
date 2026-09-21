@@ -6,6 +6,7 @@ const api: BrowserApi = {
   createIncognitoTab: (url?: string) => ipcRenderer.invoke('tab:create-incognito', url),
   closeTab: (tabId: string) => ipcRenderer.invoke('tab:close', tabId),
   switchTab: (tabId: string) => ipcRenderer.invoke('tab:switch', tabId),
+  openSettingsTab: () => ipcRenderer.invoke('tab:open-settings'),
   navigate: (tabId: string, url: string) => ipcRenderer.invoke('nav:navigate', tabId, url),
   goBack: (tabId: string) => ipcRenderer.invoke('nav:back', tabId),
   goForward: (tabId: string) => ipcRenderer.invoke('nav:forward', tabId),

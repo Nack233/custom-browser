@@ -128,6 +128,10 @@ function setupIpc() {
     viewManager?.switchTab(tabId);
   });
 
+  ipcMain.handle('tab:open-settings', () => {
+    return viewManager?.openSettingsTab();
+  });
+
   ipcMain.handle('tab:restore-closed', () => {
     return viewManager?.restoreClosedTab();
   });

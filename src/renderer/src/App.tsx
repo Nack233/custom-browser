@@ -7,6 +7,8 @@ import { NewTabPage } from './components/NewTabPage';
 import { MediaDrawer } from './components/MediaDrawer';
 import { AdShieldModal } from './components/AdShieldModal';
 import { SettingsModal } from './components/SettingsModal';
+import { SettingsPage } from './components/SettingsPage';
+import { MoreOptionsMenu } from './components/MoreOptionsMenu';
 import { DownloadsFlyout } from './components/DownloadsFlyout';
 import { UpdateLogModal } from './components/UpdateLogModal';
 import type { Language } from './i18n';
@@ -31,6 +33,7 @@ export const App: React.FC = () => {
   const [recentlyClosed, setRecentlyClosed] = useState<RecentlyClosedItem[]>([]);
   const [isUpdateLogOpen, setIsUpdateLogOpen] = useState(false);
   const [devModeEnabled, setDevModeEnabled] = useState(false);
+  const [isMoreOptionsOpen, setIsMoreOptionsOpen] = useState(false);
 
   // Refresh recently closed tabs list
   const refreshRecentlyClosed = useCallback(async () => {
@@ -170,22 +173,11 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [refreshRecentlyClosed, activeTabId]);
 
-  // Sync WebContentsView bounds when sidebar drawer opens/closes
+  // User requested: "ผมไม่อยากให้มันไปแยกพื้นที่หน้าเว็ปมากนั้น"
+  // Keep sidebarWidth = 0 so WebContentsView (YouTube / web page) is NEVER compressed or squished!
   useEffect(() => {
-    if (isUpdateLogOpen) {
-      window.browserApi.setSidebarWidth(440);
-    } else if (isMediaDrawerOpen) {
-      window.browserApi.setSidebarWidth(420);
-    } else if (isShieldOpen) {
-      window.browserApi.setSidebarWidth(340);
-    } else if (isSettingsOpen) {
-      window.browserApi.setSidebarWidth(380);
-    } else if (isDownloadsOpen) {
-      window.browserApi.setSidebarWidth(360);
-    } else {
-      window.browserApi.setSidebarWidth(0);
-    }
-  }, [isMediaDrawerOpen, isShieldOpen, isSettingsOpen, isDownloadsOpen, isUpdateLogOpen]);
+    window.browserApi.setSidebarWidth(0);
+  }, []);
 
   // Sync TopBar Height when Bookmarks bar is toggled or visible
   useEffect(() => {
@@ -195,8 +187,10 @@ export const App: React.FC = () => {
   }, [showBookmarksBar, bookmarks.length]);
 
   const isNewTabUrl = (url?: string) => !url || url === 'bocchy://newtab' || url === 'nexus://newtab' || url === 'about:blank';
+  const isSettingsUrl = (url?: string) => Boolean(url && (url === 'bocchy://settings' || url === 'nexus://settings' || url === 'about:settings'));
   const activeTab = tabs.find((t) => t.id === activeTabId);
-  const isNewTabPage = !activeTab || isNewTabUrl(activeTab.url);
+  const isSettingsPage = Boolean(activeTab && isSettingsUrl(activeTab.url));
+  const isNewTabPage = !isSettingsPage && (!activeTab || isNewTabUrl(activeTab.url));
   const currentTabMedia = (activeTabId && tabMediaMap[activeTabId]) || [];
 
   // Check if current tab is bookmarked
@@ -436,6 +430,9 @@ export const App: React.FC = () => {
           isMediaDrawerOpen={isMediaDrawerOpen}
           isShieldOpen={isShieldOpen}
           isSettingsOpen={isSettingsOpen}
+          onOpenSettingsTab={() => window.browserApi.openSettingsTab()}
+          isMoreOptionsOpen={isMoreOptionsOpen}
+          onToggleMoreOptions={() => setIsMoreOptionsOpen(!isMoreOptionsOpen)}
         />
         {showBookmarksBar && bookmarks.length > 0 && (
           <BookmarksBar
@@ -448,10 +445,27 @@ export const App: React.FC = () => {
       </header>
 
       {/* Main Content Area:
-          If current tab is nexus://newtab, render the React NewTabPage!
-          If browsing a real site, WebContentsView is rendered natively by Electron above this layer */}
+          1. If current tab is bocchy://settings, render the full SettingsPage!
+          2. If current tab is bocchy://newtab, render the React NewTabPage!
+          3. If browsing a real site, WebContentsView is rendered natively by Electron above this layer */}
       <div className="flex-1 relative w-full overflow-hidden flex flex-col">
-        {isNewTabPage && (
+        {isSettingsPage ? (
+          <SettingsPage
+            language={language}
+            onLanguageChange={(newLang) => setLanguage(newLang)}
+            forceDarkMode={forceDarkMode}
+            onToggleForceDarkMode={handleToggleForceDarkMode}
+            showBookmarksBar={showBookmarksBar}
+            onToggleBookmarksBar={handleToggleBookmarksBar}
+            devModeEnabled={devModeEnabled}
+            onToggleDevMode={async () => {
+              const next = !devModeEnabled;
+              setDevModeEnabled(next);
+              await window.browserApi.updateSettings({ devModeEnabled: next });
+            }}
+            onOpenUpdateLog={() => setIsUpdateLogOpen(true)}
+          />
+        ) : isNewTabPage ? (
           <NewTabPage
             language={language}
             shortcuts={shortcuts}
@@ -463,7 +477,7 @@ export const App: React.FC = () => {
             onRemoveShortcut={handleRemoveShortcut}
             onRestoreClosedTab={handleRestoreClosedTab}
           />
-        )}
+        ) : null}
       </div>
 
       {/* Popovers / Drawers */}
@@ -525,6 +539,52 @@ export const App: React.FC = () => {
         onClose={() => setIsUpdateLogOpen(false)}
         language={language}
         topOffset={showBookmarksBar && bookmarks.length > 0 ? 124 : 92}
+      />
+
+      {/* Microsoft Edge Style ... (More Options) Floating Menu */}
+      <MoreOptionsMenu
+        isOpen={isMoreOptionsOpen}
+        onClose={() => setIsMoreOptionsOpen(false)}
+        language={language}
+        currentZoom={activeTab?.zoomFactor || 1.0}
+        onZoomIn={() => activeTabId && window.browserApi.zoomIn(activeTabId)}
+        onZoomOut={() => activeTabId && window.browserApi.zoomOut(activeTabId)}
+        onResetZoom={() => activeTabId && window.browserApi.resetZoom(activeTabId)}
+        onNewTab={handleNewTab}
+        onNewIncognitoTab={handleNewIncognitoTab}
+        showBookmarksBar={showBookmarksBar}
+        onToggleBookmarksBar={handleToggleBookmarksBar}
+        onOpenDownloads={() => {
+          setIsDownloadsOpen(true);
+          setIsShieldOpen(false);
+          setIsMediaDrawerOpen(false);
+          setIsUpdateLogOpen(false);
+        }}
+        onOpenShield={() => {
+          setIsShieldOpen(true);
+          setIsDownloadsOpen(false);
+          setIsMediaDrawerOpen(false);
+          setIsUpdateLogOpen(false);
+        }}
+        onOpenMedia={() => {
+          setIsMediaDrawerOpen(true);
+          setIsShieldOpen(false);
+          setIsDownloadsOpen(false);
+          setIsUpdateLogOpen(false);
+        }}
+        forceDarkMode={forceDarkMode}
+        onToggleForceDarkMode={handleToggleForceDarkMode}
+        devModeEnabled={devModeEnabled}
+        onToggleDevTools={() => activeTabId && window.browserApi.toggleDevTools(activeTabId)}
+        onOpenSettings={() => window.browserApi.openSettingsTab()}
+        onOpenUpdateLog={() => {
+          setIsUpdateLogOpen(true);
+          setIsDownloadsOpen(false);
+          setIsShieldOpen(false);
+          setIsMediaDrawerOpen(false);
+        }}
+        onRestoreClosedTab={handleRestoreClosedTab}
+        canRestoreClosed={recentlyClosed.length > 0}
       />
     </div>
   );

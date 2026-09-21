@@ -26,9 +26,28 @@ interface ManagedTab {
 }
 
 export const NEW_TAB_URL = 'bocchy://newtab';
+export const SETTINGS_URL = 'bocchy://settings';
+
+export function isSettingsUrl(url?: string): boolean {
+  if (!url) return false;
+  const lower = url.toLowerCase().trim();
+  return (
+    lower === 'bocchy://settings' ||
+    lower === 'nexus://settings' ||
+    lower === 'about:settings' ||
+    lower === 'chrome://settings' ||
+    lower === 'edge://settings'
+  );
+}
 
 export function isNewTabUrl(url?: string): boolean {
-  return !url || url === 'bocchy://newtab' || url === 'nexus://newtab' || url === 'about:blank';
+  if (!url) return true;
+  const lower = url.toLowerCase().trim();
+  return lower === 'bocchy://newtab' || lower === 'nexus://newtab' || lower === 'about:blank';
+}
+
+export function isInternalPageUrl(url?: string): boolean {
+  return isNewTabUrl(url) || isSettingsUrl(url);
 }
 
 export class ViewManager {
@@ -237,8 +256,8 @@ export class ViewManager {
     const tab = this.tabs.get(this.activeTabId);
     if (!tab || !tab.view || tab.isSleeping) return;
 
-    // When on the New Tab Speed Dial page, tuck away the native view
-    if (isNewTabUrl(tab.url)) {
+    // When on an internal page (New Tab, Settings), tuck away the native view
+    if (isInternalPageUrl(tab.url)) {
       tab.view.setBounds({ x: 0, y: 0, width: 0, height: 0 });
       return;
     }
@@ -272,14 +291,19 @@ export class ViewManager {
     }
 
     const id = `tab_${view.webContents.id}`;
+    const isSettings = isSettingsUrl(initialUrl);
     const isNewTab = isNewTabUrl(initialUrl);
 
     const tab: ManagedTab = {
       id,
       view,
-      url: isNewTab ? NEW_TAB_URL : initialUrl,
-      title: isNewTab ? (isIncognito ? 'Incognito Tab' : 'New Tab') : 'Loading...',
-      isLoading: !isNewTab,
+      url: isSettings ? SETTINGS_URL : isNewTab ? NEW_TAB_URL : initialUrl,
+      title: isSettings
+        ? (this.currentLanguage === 'th' ? 'การตั้งค่า' : 'Settings')
+        : isNewTab
+        ? (isIncognito ? 'Incognito Tab' : 'New Tab')
+        : 'Loading...',
+      isLoading: !isNewTab && !isSettings,
       canGoBack: false,
       canGoForward: false,
       isIncognito,
@@ -294,7 +318,7 @@ export class ViewManager {
     this.tabs.set(id, tab);
     this.attachViewEvents(tab);
 
-    if (!isNewTab) {
+    if (!isNewTab && !isSettings) {
       this.navigate(id, initialUrl);
     }
 
@@ -624,11 +648,18 @@ export class ViewManager {
     }
 
     let targetUrl = inputUrl.trim();
+    if (isSettingsUrl(targetUrl)) {
+      tab.url = SETTINGS_URL;
+      tab.title = this.currentLanguage === 'th' ? 'การตั้งค่า' : 'Settings';
+      tab.isLoading = false;
+      this.updateActiveViewBounds();
+      this.notifyTabsUpdated();
+      return;
+    }
+
     if (isNewTabUrl(targetUrl)) {
       tab.url = NEW_TAB_URL;
-      if (isNewTabUrl(tab.url)) {
-        tab.title = tab.isIncognito ? 'Incognito Tab' : 'New Tab';
-      }
+      tab.title = tab.isIncognito ? 'Incognito Tab' : 'New Tab';
       tab.isLoading = false;
       this.updateActiveViewBounds();
       this.notifyTabsUpdated();
@@ -697,6 +728,16 @@ export class ViewManager {
 
   public getTab(tabId: string): ManagedTab | undefined {
     return this.tabs.get(tabId);
+  }
+
+  public openSettingsTab(): string {
+    for (const tab of this.tabs.values()) {
+      if (isSettingsUrl(tab.url)) {
+        this.switchTab(tab.id);
+        return tab.id;
+      }
+    }
+    return this.createTab(SETTINGS_URL, false, true);
   }
 
   private applyVolumeToWebContents(wc: any, volume: number, isMuted: boolean) {

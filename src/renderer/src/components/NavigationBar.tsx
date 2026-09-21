@@ -19,6 +19,7 @@ import {
   ZoomOut,
   Sparkles,
   Code2,
+  MoreHorizontal,
 } from 'lucide-react';
 import type { Language } from '../i18n';
 import { translations } from '../i18n';
@@ -53,6 +54,9 @@ interface NavigationBarProps {
   isDownloadsOpen: boolean;
   onToggleDownloads: () => void;
   activeDownloadsCount: number;
+  onOpenSettingsTab: () => void;
+  isMoreOptionsOpen: boolean;
+  onToggleMoreOptions: () => void;
 }
 
 export const NavigationBar: React.FC<NavigationBarProps> = ({
@@ -85,6 +89,9 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
   isDownloadsOpen,
   onToggleDownloads,
   activeDownloadsCount,
+  onOpenSettingsTab,
+  isMoreOptionsOpen,
+  onToggleMoreOptions,
 }) => {
   const [inputUrl, setInputUrl] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -238,10 +245,10 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         <button
           onClick={onToggleUpdateLog}
           className="flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#fa5c8d] hover:bg-[#f4477c] text-white shadow-xs transition-all"
-          title={t.whatsNew || "What's New in v1.1.1"}
+          title={t.whatsNew || "What's New in v1.2.0"}
         >
           <Sparkles className="w-3.5 h-3.5 text-pink-100 animate-pulse" />
-          <span className="text-[10px] font-mono">v1.1.1</span>
+          <span className="text-[10px] font-mono">v1.2.0</span>
         </button>
 
         {/* Force Dark Mode Quick Toggle */}
@@ -335,17 +342,26 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
           )}
         </button>
 
-        {/* Settings Button */}
+        {/* Settings Tab Button */}
         <button
-          onClick={onToggleSettings}
-          className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-            isSettingsOpen
-              ? 'bg-[#fa5c8d] text-white shadow-xs'
-              : 'text-gray-650 hover:text-gray-950 hover:bg-pink-200/60'
-          }`}
-          title={t.settings}
+          onClick={onOpenSettingsTab}
+          className="w-8 h-8 rounded-full flex items-center justify-center transition-colors text-gray-650 hover:text-gray-950 hover:bg-pink-200/60"
+          title={language === 'th' ? 'การตั้งค่า (bocchy://settings)' : 'Settings (bocchy://settings)'}
         >
           <Settings className="w-4 h-4" />
+        </button>
+
+        {/* Microsoft Edge Style ... (More Options) Button */}
+        <button
+          onClick={onToggleMoreOptions}
+          className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+            isMoreOptionsOpen
+              ? 'bg-[#fa5c8d] text-white shadow-xs'
+              : 'text-gray-700 hover:text-black hover:bg-pink-200/60'
+          }`}
+          title={language === 'th' ? 'การตั้งค่าและอื่น ๆ (...)' : 'Settings and more (...)'}
+        >
+          <MoreHorizontal className="w-4 h-4" />
         </button>
       </div>
     </div>

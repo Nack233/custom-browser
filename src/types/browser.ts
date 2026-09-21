@@ -98,6 +98,7 @@ export interface BrowserApi {
   createIncognitoTab: (url?: string) => Promise<string>;
   closeTab: (tabId: string) => Promise<void>;
   switchTab: (tabId: string) => Promise<void>;
+  openSettingsTab: () => Promise<string>;
   sleepTab: (tabId: string) => Promise<void>;
   navigate: (tabId: string, url: string) => Promise<void>;
   goBack: (tabId: string) => Promise<void>;
