@@ -172,7 +172,9 @@ export const App: React.FC = () => {
 
   // Sync WebContentsView bounds when sidebar drawer opens/closes
   useEffect(() => {
-    if (isMediaDrawerOpen) {
+    if (isUpdateLogOpen) {
+      window.browserApi.setSidebarWidth(440);
+    } else if (isMediaDrawerOpen) {
       window.browserApi.setSidebarWidth(420);
     } else if (isShieldOpen) {
       window.browserApi.setSidebarWidth(340);
@@ -183,7 +185,7 @@ export const App: React.FC = () => {
     } else {
       window.browserApi.setSidebarWidth(0);
     }
-  }, [isMediaDrawerOpen, isShieldOpen, isSettingsOpen, isDownloadsOpen]);
+  }, [isMediaDrawerOpen, isShieldOpen, isSettingsOpen, isDownloadsOpen, isUpdateLogOpen]);
 
   // Sync TopBar Height when Bookmarks bar is toggled or visible
   useEffect(() => {
@@ -378,18 +380,21 @@ export const App: React.FC = () => {
             setIsMediaDrawerOpen(false);
             setIsSettingsOpen(false);
             setIsDownloadsOpen(false);
+            setIsUpdateLogOpen(false);
           }}
           onToggleMediaDrawer={() => {
             setIsMediaDrawerOpen(!isMediaDrawerOpen);
             setIsShieldOpen(false);
             setIsSettingsOpen(false);
             setIsDownloadsOpen(false);
+            setIsUpdateLogOpen(false);
           }}
           onToggleSettings={() => {
             setIsSettingsOpen(!isSettingsOpen);
             setIsShieldOpen(false);
             setIsMediaDrawerOpen(false);
             setIsDownloadsOpen(false);
+            setIsUpdateLogOpen(false);
           }}
           isDownloadsOpen={isDownloadsOpen}
           onToggleDownloads={() => {
@@ -397,12 +402,22 @@ export const App: React.FC = () => {
             setIsShieldOpen(false);
             setIsMediaDrawerOpen(false);
             setIsSettingsOpen(false);
+            setIsUpdateLogOpen(false);
           }}
           activeDownloadsCount={downloads.filter((d) => d.state === 'progressing').length}
           onToggleBookmark={handleToggleBookmark}
           onToggleForceDarkMode={handleToggleForceDarkMode}
           onToggleBookmarksBar={handleToggleBookmarksBar}
-          onToggleUpdateLog={() => setIsUpdateLogOpen(true)}
+          onToggleUpdateLog={() => {
+            const next = !isUpdateLogOpen;
+            setIsUpdateLogOpen(next);
+            if (next) {
+              setIsShieldOpen(false);
+              setIsMediaDrawerOpen(false);
+              setIsSettingsOpen(false);
+              setIsDownloadsOpen(false);
+            }
+          }}
           onToggleDevTools={() => {
             if (activeTabId) window.browserApi.toggleDevTools(activeTabId);
           }}
@@ -486,7 +501,11 @@ export const App: React.FC = () => {
           setDevModeEnabled(next);
           await window.browserApi.updateSettings({ devModeEnabled: next });
         }}
-        onOpenUpdateLog={() => setIsUpdateLogOpen(true)}
+        onOpenUpdateLog={() => {
+          setIsSettingsOpen(false);
+          setIsUpdateLogOpen(true);
+        }}
+        topOffset={showBookmarksBar && bookmarks.length > 0 ? 108 : 78}
       />
 
       <DownloadsFlyout
@@ -505,6 +524,7 @@ export const App: React.FC = () => {
         isOpen={isUpdateLogOpen}
         onClose={() => setIsUpdateLogOpen(false)}
         language={language}
+        topOffset={showBookmarksBar && bookmarks.length > 0 ? 108 : 78}
       />
     </div>
   );

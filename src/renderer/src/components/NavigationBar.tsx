@@ -88,8 +88,6 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
 }) => {
   const [inputUrl, setInputUrl] = useState('');
   const [isFocused, setIsFocused] = useState(false);
-  const [isZoomOpen, setIsZoomOpen] = useState(false);
-  const zoomRef = useRef<HTMLDivElement | null>(null);
 
   const t = translations[language] || translations.th;
 
@@ -105,19 +103,6 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
       }
     }
   }, [activeTab?.url, isFocused]);
-
-  // Close zoom popover when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (zoomRef.current && !zoomRef.current.contains(e.target as Node)) {
-        setIsZoomOpen(false);
-      }
-    };
-    if (isZoomOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isZoomOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -209,73 +194,33 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
 
       {/* Action Buttons */}
       <div className="flex items-center space-x-1.5">
-        {/* Page Zoom Control Button */}
-        <div className="relative" ref={zoomRef}>
+        {/* Page Zoom Inline Stepper (Never clips behind WebContentsView) */}
+        <div className="flex items-center bg-[#131317] border border-[#2b2b36] rounded-lg p-0.5 space-x-0.5 select-none">
           <button
-            onClick={() => setIsZoomOpen(!isZoomOpen)}
-            className={`flex items-center space-x-1 px-2 py-1 rounded-md text-xs font-mono font-medium transition-all ${
+            onClick={onZoomOut}
+            className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-white hover:bg-[#252532] transition-colors"
+            title={t.zoomOut || 'Zoom Out (Ctrl + -)'}
+          >
+            <ZoomOut className="w-3 h-3" />
+          </button>
+          <button
+            onClick={onResetZoom}
+            className={`px-1.5 h-5 flex items-center justify-center rounded font-mono text-[10px] font-bold transition-colors ${
               zoomPercent !== 100
                 ? 'bg-blue-600/30 text-blue-300 border border-blue-500/40'
-                : 'bg-[#22222a] text-gray-400 hover:text-gray-200 hover:bg-[#2c2c36]'
+                : 'text-gray-300 hover:text-white hover:bg-[#22222a]'
             }`}
-            title={`${t.zoom || 'Zoom'}: ${zoomPercent}%`}
+            title={t.resetZoom || 'Reset to 100% (Ctrl + 0)'}
           >
-            <ZoomIn className="w-3 h-3 text-blue-400" />
-            <span className="text-[11px]">{zoomPercent}%</span>
+            {zoomPercent}%
           </button>
-
-          {/* Zoom Popover */}
-          {isZoomOpen && (
-            <div className="absolute right-0 top-9 z-50 w-56 p-3 bg-[#191920] border border-[#2e2e3d] rounded-xl shadow-2xl shadow-black/80 animate-in fade-in duration-150">
-              <div className="flex items-center justify-between pb-2 border-b border-[#292938]">
-                <span className="text-xs font-semibold text-gray-200">{t.zoom || 'Page Zoom'}</span>
-                <span className="font-mono text-xs font-bold text-blue-400">{zoomPercent}%</span>
-              </div>
-
-              <div className="flex items-center justify-center space-x-3 py-3">
-                <button
-                  onClick={onZoomOut}
-                  className="p-1.5 rounded-lg bg-[#242432] hover:bg-[#323244] text-gray-300 hover:text-white transition-colors"
-                  title={t.zoomOut || 'Zoom Out'}
-                >
-                  <ZoomOut className="w-4 h-4" />
-                </button>
-
-                <button
-                  onClick={onResetZoom}
-                  className="px-3 py-1 rounded-lg bg-[#262638] hover:bg-[#34344d] text-xs font-mono font-bold text-gray-200 transition-colors"
-                  title={t.resetZoom || 'Reset 100%'}
-                >
-                  100%
-                </button>
-
-                <button
-                  onClick={onZoomIn}
-                  className="p-1.5 rounded-lg bg-[#242432] hover:bg-[#323244] text-gray-300 hover:text-white transition-colors"
-                  title={t.zoomIn || 'Zoom In'}
-                >
-                  <ZoomIn className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Preset Buttons */}
-              <div className="grid grid-cols-4 gap-1 pt-1 border-t border-[#262635] text-[10px] font-mono">
-                {[50, 75, 125, 150].map((level) => (
-                  <button
-                    key={level}
-                    onClick={() => onSetZoom(level / 100)}
-                    className={`py-1 rounded text-center transition-colors ${
-                      zoomPercent === level
-                        ? 'bg-blue-600 text-white font-bold'
-                        : 'bg-[#22222d] text-gray-400 hover:bg-[#2d2d3d] hover:text-gray-200'
-                    }`}
-                  >
-                    {level}%
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          <button
+            onClick={onZoomIn}
+            className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-white hover:bg-[#252532] transition-colors"
+            title={t.zoomIn || 'Zoom In (Ctrl + +)'}
+          >
+            <ZoomIn className="w-3 h-3" />
+          </button>
         </div>
 
         {/* Developer Mode Quick Button */}
@@ -293,10 +238,10 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         <button
           onClick={onToggleUpdateLog}
           className="flex items-center space-x-1 px-2 py-1 rounded-md text-xs font-medium bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-pink-300 hover:from-pink-500/30 hover:to-purple-500/30 border border-pink-500/30 shadow-sm transition-all"
-          title={t.whatsNew || "What's New in v1.1.0"}
+          title={t.whatsNew || "What's New in v1.1.1"}
         >
           <Sparkles className="w-3.5 h-3.5 text-pink-400" />
-          <span className="text-[10px] font-bold font-mono">v1.1.0</span>
+          <span className="text-[10px] font-bold font-mono">v1.1.1</span>
         </button>
 
         {/* Force Dark Mode Quick Toggle */}

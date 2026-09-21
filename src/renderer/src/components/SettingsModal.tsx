@@ -31,6 +31,7 @@ interface SettingsModalProps {
   devModeEnabled: boolean;
   onToggleDevMode: () => void;
   onOpenUpdateLog: () => void;
+  topOffset?: number;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -45,6 +46,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   devModeEnabled,
   onToggleDevMode,
   onOpenUpdateLog,
+  topOffset = 78,
 }) => {
   const [activeTab, setActiveTab] = useState<'general' | 'language' | 'dns' | 'about'>('general');
   const [dnsProvider, setDnsProvider] = useState<AppSettings['dnsProvider']>('cloudflare');
@@ -143,7 +145,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   ];
 
   return (
-    <div className="fixed top-[78px] right-0 bottom-0 w-[380px] bg-[#16161a] border-l border-[#25252b] z-50 flex flex-col shadow-2xl animate-in slide-in-from-right duration-200 select-none">
+    <div
+      className="fixed right-0 bottom-0 w-[380px] bg-[#16161a] border-l border-[#25252b] z-50 flex flex-col shadow-2xl animate-in slide-in-from-right duration-200 select-none"
+      style={{ top: `${topOffset}px` }}
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#25252b] bg-[#131317]">
         <div className="flex items-center space-x-2">
@@ -585,7 +590,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <img src="./bocchy.png" alt="Bocchy" className="w-full h-full object-cover rounded-xl" />
               </div>
               <h3 className="font-semibold text-gray-100 text-sm">Bocchy Browser</h3>
-              <p className="text-[11px] text-pink-400 font-mono font-semibold">v1.1.0 • Custom Chromium Browser</p>
+              <p className="text-[11px] text-pink-400 font-mono font-semibold">v1.1.1 Hotfix • Custom Chromium Browser</p>
             </div>
 
             <div className="space-y-2 text-[11px]">
@@ -625,7 +630,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               className="w-full mt-2 py-2 px-3 flex items-center justify-center space-x-2 bg-gradient-to-r from-pink-500/20 to-purple-500/20 hover:from-pink-500/30 hover:to-purple-500/30 text-pink-300 border border-pink-500/30 rounded-lg text-xs font-semibold transition-all shadow-sm active:scale-95"
             >
               <Sparkles className="w-3.5 h-3.5 text-pink-400" />
-              <span>{language === 'th' ? 'ดูบันทึกการอัปเดต (What\'s New in v1.1.0)' : 'View Release Notes & Changelog'}</span>
+              <span>{language === 'th' ? 'ดูบันทึกการอัปเดต (What\'s New in v1.1.1)' : 'View Release Notes & Changelog'}</span>
             </button>
           </div>
         )}

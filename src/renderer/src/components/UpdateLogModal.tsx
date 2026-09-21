@@ -12,197 +12,206 @@ import {
   Zap,
   CheckCircle2,
   Calendar,
-  ExternalLink,
+  Wrench,
 } from 'lucide-react';
 
 interface UpdateLogModalProps {
   isOpen: boolean;
   onClose: () => void;
   language: Language;
+  topOffset?: number;
 }
 
-export const UpdateLogModal: React.FC<UpdateLogModalProps> = ({ isOpen, onClose, language }) => {
+export const UpdateLogModal: React.FC<UpdateLogModalProps> = ({
+  isOpen,
+  onClose,
+  language,
+  topOffset = 78,
+}) => {
   if (!isOpen) return null;
 
   const isTh = language === 'th';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
-      <div
-        className="relative flex flex-col w-full max-w-2xl max-h-[85vh] bg-[#16161b] border border-[#2d2d38] rounded-2xl shadow-2xl shadow-black/80 overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#252530] bg-[#1b1b22]/70">
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-500/30 text-pink-400">
-              <Sparkles className="w-5 h-5" />
+    <div
+      className="fixed right-0 bottom-0 w-[440px] bg-[#16161c] border-l border-[#282834] z-50 flex flex-col shadow-2xl select-none animate-in slide-in-from-right duration-200"
+      style={{ top: `${topOffset}px` }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#252530] bg-[#141419]">
+        <div className="flex items-center space-x-2.5">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-500/30 text-pink-400">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center space-x-2">
+              <h2 className="text-xs font-bold text-gray-100">
+                {isTh ? 'ประวัติการอัปเดต (Update Log)' : 'Changelog & Updates'}
+              </h2>
+              <span className="px-1.5 py-0.2 text-[9px] font-bold font-mono uppercase rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                v1.1.1 Hotfix
+              </span>
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <h2 className="text-sm font-bold text-gray-100">
-                  {isTh ? 'บันทึกการอัปเดต (Update Log)' : 'Release Notes & Changelog'}
-                </h2>
-                <span className="px-2 py-0.5 text-[10px] font-bold font-mono uppercase rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30">
-                  v1.1.0 Latest
-                </span>
+            <p className="text-[10px] text-gray-400 mt-0.5">
+              {isTh ? 'การปรับปรุงแก้ไขข้อบกพร่องและฟีเจอร์ล่าสุด' : 'Latest improvements & bug fixes'}
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-[#25252e] transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Body Content */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-5 text-xs text-gray-300 no-scrollbar">
+        {/* VERSION 1.1.1 HOTFIX */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between pb-1.5 border-b border-[#2a2a38]">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-bold text-rose-400 font-mono">v1.1.1</span>
+              <span className="px-1.5 py-0.2 text-[9px] font-semibold rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                {isTh ? 'Hotfix แก้ไขด่วน' : 'Hotfix'}
+              </span>
+            </div>
+            <div className="flex items-center text-gray-500 text-[10px] space-x-1">
+              <Calendar className="w-3 h-3" />
+              <span>2026-09-21</span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="p-3 bg-[#1c1a24] border border-rose-500/25 rounded-xl space-y-1">
+              <div className="flex items-center space-x-1.5 text-rose-300 font-semibold text-[11px]">
+                <Wrench className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>{isTh ? 'แก้ไขหน้าต่าง Zoom หล่นไปอยู่หลังหน้าเว็บ' : 'Fix Zoom Controls Clipping Behind Page'}</span>
               </div>
-              <p className="text-[11px] text-gray-400 mt-0.5">
+              <p className="text-[10px] text-gray-400 leading-relaxed pl-5">
                 {isTh
-                  ? 'ตรวจสอบคุณสมบัติใหม่และการปรับปรุงใน Bocchy Browser'
-                  : "Discover what's new and improved in Bocchy Browser"}
+                  ? 'ปรับตัวควบคุมการซูมเป็นแบบ Inline Stepper ([-] 100% [+]) บน Navigation Bar ทำให้กดซูมได้ทันทีและไม่ถูก WebContentsView / YouTube บดบัง'
+                  : 'Redesigned zoom controls into an inline stepper on the top bar, ensuring it never gets hidden behind native WebContentsView.'}
+              </p>
+            </div>
+
+            <div className="p-3 bg-[#1c1a24] border border-rose-500/25 rounded-xl space-y-1">
+              <div className="flex items-center space-x-1.5 text-rose-300 font-semibold text-[11px]">
+                <Wrench className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>{isTh ? 'แก้ไขปัญหาแถบด้านบนจอดำเมื่อเปิด Update Log' : 'Fix Dark Top Bar Overlay on Update Log'}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 leading-relaxed pl-5">
+                {isTh
+                  ? 'เปลี่ยนหน้าต่าง Update Log เป็น Right-Side Drawer ที่หดพื้นที่หน้าเว็บออกโดยอัตโนมัติ ทำให้ดูอัปเดตไปพร้อมกับการดู YouTube ได้โดยแถบไม่ดำ'
+                  : 'Converted the update log to a right-side drawer with auto window resize, eliminating dark overlay on the top bar.'}
+              </p>
+            </div>
+
+            <div className="p-3 bg-[#1c1a24] border border-rose-500/25 rounded-xl space-y-1">
+              <div className="flex items-center space-x-1.5 text-rose-300 font-semibold text-[11px]">
+                <Wrench className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>{isTh ? 'เพิ่ม Scroll Wheel ปรับเสียงที่หัวแท็บ' : 'Scroll Wheel Audio Volume on Tabs'}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 leading-relaxed pl-5">
+                {isTh
+                  ? 'สามารถหมุนล้อเมาส์บนไอคอนลำโพงที่หัวแท็บเพื่อปรับระดับความดังขึ้น-ลงได้อย่างรวดเร็ว และคลิกเพื่อ Mute/Unmute'
+                  : 'Quickly adjust volume by scrolling the mouse wheel on the tab speaker icon, and click to instantly mute/unmute.'}
               </p>
             </div>
           </div>
-
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-[#282834] transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
         </div>
 
-        {/* Content Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 custom-scrollbar text-xs text-gray-300">
-          {/* VERSION 1.1.0 */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-[#262633]">
-              <div className="flex items-center space-x-2">
-                <span className="text-base font-bold text-pink-400 font-mono">v1.1.0</span>
-                <span className="px-2 py-0.5 text-[10px] font-medium rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  {isTh ? 'เวอร์ชันปัจจุบัน' : 'Current Release'}
-                </span>
-              </div>
-              <div className="flex items-center text-gray-500 text-[11px] space-x-1">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>2026-09-21</span>
-              </div>
+        {/* VERSION 1.1.0 */}
+        <div className="space-y-3 pt-2 border-t border-[#262635]">
+          <div className="flex items-center justify-between pb-1.5 border-b border-[#252532]">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-bold text-pink-400 font-mono">v1.1.0</span>
+              <span className="px-1.5 py-0.2 text-[9px] font-semibold rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                Major Update
+              </span>
             </div>
-
-            {/* Feature Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {/* Feature 1: Tab Volume */}
-              <div className="p-3.5 bg-[#1a1a23] border border-indigo-500/20 rounded-xl space-y-1.5 hover:border-indigo-500/40 transition-colors">
-                <div className="flex items-center space-x-2 text-indigo-400 font-semibold">
-                  <Volume2 className="w-4 h-4 flex-shrink-0" />
-                  <span className="text-gray-100">
-                    {isTh ? 'จัดการเสียงแยกแท็บ (Per-Tab Audio)' : 'Per-Tab Audio & Volume'}
-                  </span>
-                </div>
-                <p className="text-[11px] text-gray-400 leading-relaxed">
-                  {isTh
-                    ? 'ปรับระดับความดัง (0% - 100%) แยกอิสระในแต่ละแท็บ พร้อมสัญลักษณ์คลื่นเสียง 🔊 และคลิกเพื่อ Mute/Unmute ทันที'
-                    : 'Independent volume control (0% - 100%) and instant mute toggle with animated audio wave indicators on each tab.'}
-                </p>
-              </div>
-
-              {/* Feature 2: Page Zoom */}
-              <div className="p-3.5 bg-[#1a1a23] border border-blue-500/20 rounded-xl space-y-1.5 hover:border-blue-500/40 transition-colors">
-                <div className="flex items-center space-x-2 text-blue-400 font-semibold">
-                  <ZoomIn className="w-4 h-4 flex-shrink-0" />
-                  <span className="text-gray-100">
-                    {isTh ? 'ย่อ-ขยายหน้าเว็บ (Page Zoom)' : 'Page Zoom Controls'}
-                  </span>
-                </div>
-                <p className="text-[11px] text-gray-400 leading-relaxed">
-                  {isTh
-                    ? 'ซูมหน้าเว็บได้ตั้งแต่ 25% ถึง 500% ผ่านคีย์ลัด Ctrl + + / Ctrl + - / Ctrl + 0 หรือตัวปรับสเกลบนแถบเครื่องมือ'
-                    : 'Scale web pages smoothly from 25% to 500% using standard Ctrl + +/- / 0 shortcuts or toolbar zoom stepper.'}
-                </p>
-              </div>
-
-              {/* Feature 3: Dev Mode */}
-              <div className="p-3.5 bg-[#1a1a23] border border-amber-500/20 rounded-xl space-y-1.5 hover:border-amber-500/40 transition-colors">
-                <div className="flex items-center space-x-2 text-amber-400 font-semibold">
-                  <Code2 className="w-4 h-4 flex-shrink-0" />
-                  <span className="text-gray-100">
-                    {isTh ? 'โหมดนักพัฒนา (Developer Mode)' : 'Developer Mode & F12'}
-                  </span>
-                </div>
-                <p className="text-[11px] text-gray-400 leading-relaxed">
-                  {isTh
-                    ? 'เปิด DevTools ตรวจสอบหน้าเว็บ คอนโซล โค้ด และเน็ตเวิร์กได้อย่างรวดเร็วด้วยปุ่ม F12 หรือ Ctrl + Shift + I'
-                    : 'Instantly inspect web elements, run scripts in console, and inspect network traffic with F12 and shortcut triggers.'}
-                </p>
-              </div>
-
-              {/* Feature 4: Update Log Viewer */}
-              <div className="p-3.5 bg-[#1a1a23] border border-pink-500/20 rounded-xl space-y-1.5 hover:border-pink-500/40 transition-colors">
-                <div className="flex items-center space-x-2 text-pink-400 font-semibold">
-                  <FileText className="w-4 h-4 flex-shrink-0" />
-                  <span className="text-gray-100">
-                    {isTh ? 'บันทึกการอัปเดต (Update Log)' : 'Interactive Changelog'}
-                  </span>
-                </div>
-                <p className="text-[11px] text-gray-400 leading-relaxed">
-                  {isTh
-                    ? 'หน้าต่างดูประวัติและความเปลี่ยนแปลงในแต่ละเวอร์ชัน เข้าถึงได้ง่ายจากแถบเครื่องมือและการตั้งค่า'
-                    : 'Easily track all releases, new additions, bug fixes, and feature guides anytime from the toolbar or settings.'}
-                </p>
-              </div>
+            <div className="flex items-center text-gray-500 text-[10px] space-x-1">
+              <Calendar className="w-3 h-3" />
+              <span>2026-09-21</span>
             </div>
           </div>
 
-          {/* VERSION 1.0.0 */}
-          <div className="space-y-3 pt-3 border-t border-[#262633]/60">
-            <div className="flex items-center justify-between pb-2 border-b border-[#20202a]">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm font-bold text-gray-400 font-mono">v1.0.0</span>
-                <span className="px-2 py-0.5 text-[10px] font-medium rounded-md bg-gray-800 text-gray-400">
-                  Initial Release
-                </span>
+          <div className="space-y-2">
+            <div className="p-2.5 bg-[#191922] border border-[#272736] rounded-lg space-y-1">
+              <div className="flex items-center space-x-1.5 text-indigo-400 font-semibold text-[11px]">
+                <Volume2 className="w-3.5 h-3.5" />
+                <span className="text-gray-200">{isTh ? 'ระบบควบคุมเสียงแยกแท็บ' : 'Per-Tab Audio Control'}</span>
               </div>
-              <div className="flex items-center text-gray-500 text-[11px] space-x-1">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>2026-09-20</span>
-              </div>
+              <p className="text-[10px] text-gray-400 pl-5">
+                {isTh
+                  ? 'ตรวจจับเสียงแท็บอัตโนมัติ แสดงไอคอนคลื่นเสียง 🔊 และปรับ Mute / Volume 0-100%'
+                  : 'Independent per-tab volume and instant mute with audio wave animations.'}
+              </p>
             </div>
 
-            <ul className="space-y-2 text-[11px] text-gray-400">
-              <li className="flex items-start space-x-2">
-                <ShieldCheck className="w-3.5 h-3.5 text-indigo-400 mt-0.5 flex-shrink-0" />
-                <span>
-                  <b>AdShield Protection:</b> สกัดกั้นโฆษณา แบนเนอร์ GIF ป๊อปอัป และลิงก์เด้งพนันตั้งแต่ระดับคำขอเน็ตเวิร์ก
-                </span>
-              </li>
-              <li className="flex items-start space-x-2">
-                <Film className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
-                <span>
-                  <b>Media Extractor 2.0:</b> ดักจับวิดีโอ สตรีม HLS และรูปภาพในเว็บ พร้อมดาวน์โหลดรวมเป็นไฟล์ .ZIP
-                </span>
-              </li>
-              <li className="flex items-start space-x-2">
-                <Zap className="w-3.5 h-3.5 text-amber-400 mt-0.5 flex-shrink-0" />
-                <span>
-                  <b>DNS-over-HTTPS (DoH):</b> รองรับ Cloudflare, Google, AdGuard, Quad9 เพื่อความปลอดภัยและปลดบล็อก ISP
-                </span>
-              </li>
-              <li className="flex items-start space-x-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />
-                <span>
-                  <b>Smart Tab Sleep & RAM Saver:</b> จำศีลแท็บที่ไม่ได้ใช้งานอัตโนมัติ ช่วยประหยัดแรมได้ถึง 70%
-                </span>
-              </li>
-            </ul>
+            <div className="p-2.5 bg-[#191922] border border-[#272736] rounded-lg space-y-1">
+              <div className="flex items-center space-x-1.5 text-blue-400 font-semibold text-[11px]">
+                <ZoomIn className="w-3.5 h-3.5" />
+                <span className="text-gray-200">{isTh ? 'ย่อ-ขยายหน้าเว็บ (Page Zoom)' : 'Page Zoom 25% - 500%'}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 pl-5">
+                {isTh
+                  ? 'ซูมหน้าเว็บผ่านปุ่มลัด Ctrl + + / Ctrl + - / Ctrl + 0'
+                  : 'Scale web pages with shortcuts Ctrl + +/- / 0.'}
+              </p>
+            </div>
+
+            <div className="p-2.5 bg-[#191922] border border-[#272736] rounded-lg space-y-1">
+              <div className="flex items-center space-x-1.5 text-amber-400 font-semibold text-[11px]">
+                <Code2 className="w-3.5 h-3.5" />
+                <span className="text-gray-200">{isTh ? 'โหมดนักพัฒนา (Developer Mode)' : 'Developer Mode'}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 pl-5">
+                {isTh
+                  ? 'กด F12 หรือ Ctrl + Shift + I เพื่อเปิด DevTools ตรวจสอบโค้ดหน้าเว็บและ Console'
+                  : 'Toggle Chrome DevTools with F12 or Ctrl + Shift + I.'}
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-3.5 border-t border-[#252530] bg-[#141418]">
-          <div className="flex items-center space-x-2 text-[11px] text-gray-500">
-            <span>Bocchy Custom Web Browser</span>
-            <span>•</span>
-            <span className="font-mono text-gray-400">v1.1.0</span>
+        {/* VERSION 1.0.0 */}
+        <div className="space-y-2 pt-2 border-t border-[#262635]">
+          <div className="flex items-center justify-between pb-1 border-b border-[#20202a]">
+            <span className="text-xs font-bold text-gray-400 font-mono">v1.0.0 Initial</span>
+            <span className="text-gray-500 text-[10px]">2026-09-20</span>
           </div>
-
-          <button
-            onClick={onClose}
-            className="px-4 py-1.5 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white rounded-lg text-xs font-semibold shadow-md shadow-pink-950/40 transition-all active:scale-95"
-          >
-            {isTh ? 'ปิดหน้าต่าง' : 'Close'}
-          </button>
+          <ul className="space-y-1.5 text-[10px] text-gray-400">
+            <li className="flex items-center space-x-1.5">
+              <ShieldCheck className="w-3 h-3 text-indigo-400 flex-shrink-0" />
+              <span>AdShield & Tracker Blocking</span>
+            </li>
+            <li className="flex items-center space-x-1.5">
+              <Film className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+              <span>Media Extractor 2.0 & ZIP Packager</span>
+            </li>
+            <li className="flex items-center space-x-1.5">
+              <Zap className="w-3 h-3 text-amber-400 flex-shrink-0" />
+              <span>DNS-over-HTTPS (DoH) Bypass ISP</span>
+            </li>
+            <li className="flex items-center space-x-1.5">
+              <CheckCircle2 className="w-3 h-3 text-blue-400 flex-shrink-0" />
+              <span>Tab Sleep Memory Saver (Save 70% RAM)</span>
+            </li>
+          </ul>
         </div>
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between px-4 py-2.5 border-t border-[#22222a] bg-[#121216]">
+        <span className="text-[10px] text-gray-500 font-mono">Bocchy v1.1.1 Hotfix</span>
+        <button
+          onClick={onClose}
+          className="px-3 py-1 bg-[#262633] hover:bg-[#343444] text-white rounded-md text-[11px] font-medium transition-colors"
+        >
+          {isTh ? 'ปิด' : 'Close'}
+        </button>
       </div>
     </div>
   );
