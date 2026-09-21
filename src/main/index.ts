@@ -17,7 +17,7 @@ let settingsManager: SettingsManager | null = null;
 let downloadManager: DownloadManager | null = null;
 let localeManager: LocaleManager | null = null;
 let windowStateManager: WindowStateManager | null = null;
-type FlyoutType = 'downloads' | 'shield' | 'media-extractor' | 'media-control';
+type FlyoutType = 'downloads' | 'shield' | 'media-extractor' | 'media-control' | 'more-options';
 
 let flyoutWindow: BrowserWindow | null = null;
 let currentFlyoutType: FlyoutType | null = null;
@@ -29,6 +29,7 @@ const FLYOUT_CONFIG: Record<FlyoutType, { width: number; height: number }> = {
   shield: { width: 360, height: 520 },
   'media-extractor': { width: 440, height: 600 },
   'media-control': { width: 420, height: 560 },
+  'more-options': { width: 310, height: 570 },
 };
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;

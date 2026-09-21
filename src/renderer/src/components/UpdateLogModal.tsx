@@ -57,11 +57,11 @@ export const UpdateLogModal: React.FC<UpdateLogModalProps> = ({
                 {isTh ? 'ประวัติการอัปเดต (Update Log)' : 'Changelog & Updates'}
               </h2>
               <span className="px-1.5 py-0.2 text-[9px] font-bold font-mono uppercase rounded bg-pink-500/20 text-pink-300 border border-pink-500/30">
-                v1.3.1
+                v1.3.2
               </span>
             </div>
             <p className="text-[10px] text-gray-400 mt-0.5">
-              {isTh ? 'v1.3.1: Advertisement Alt Blocker & Banner Hotfix' : 'v1.3.1: Advertisement Alt Blocker & Banner Hotfix'}
+              {isTh ? 'v1.3.2: Universal Floating Modals & More Options Fix' : 'v1.3.2: Universal Floating Modals & More Options Fix'}
             </p>
           </div>
         </div>
@@ -76,6 +76,48 @@ export const UpdateLogModal: React.FC<UpdateLogModalProps> = ({
 
       {/* Body Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-5 text-xs text-gray-300 no-scrollbar">
+        {/* VERSION 1.3.2 (HOTFIX: UNIVERSAL FLOATING MODALS & MORE OPTIONS) */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between pb-1.5 border-b border-[#2a2a38]">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-bold text-pink-400 font-mono">v1.3.2</span>
+              <span className="px-1.5 py-0.2 text-[9px] font-semibold rounded bg-pink-500/20 text-pink-300 border border-pink-500/30">
+                {isTh ? 'แพตช์ด่วน Floating UI' : 'Floating UI Hotfix'}
+              </span>
+            </div>
+            <div className="flex items-center text-gray-500 text-[10px] space-x-1">
+              <Calendar className="w-3 h-3" />
+              <span>2026-09-21</span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="p-3 bg-[#241a24] border border-pink-500/30 rounded-xl space-y-1">
+              <div className="flex items-center space-x-1.5 text-pink-300 font-semibold text-[11px]">
+                <Sparkles className="w-3.5 h-3.5 flex-shrink-0 text-pink-400" />
+                <span>{isTh ? 'แก้เมนู 3 จุด (...) ไม่ให้จมไปอยู่หลังหน้าเว็บ' : 'Fixed More Options Menu Falling Behind Webpage'}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 leading-relaxed pl-5">
+                {isTh
+                  ? 'อัปเกรดเมนู 3 จุด (...) เป็น Floating Child Modal Window ลอยอยู่เหนือหน้าเว็บและ YouTube ตลอดเวลา ปิดอัตโนมัติเมื่อคลิกนอกหน้าต่าง'
+                  : 'Upgraded 3-dot (...) menu to a floating child modal window rendered on top of all webpage content and YouTube players.'}
+              </p>
+            </div>
+
+            <div className="p-3 bg-[#1e1e28] border border-blue-500/30 rounded-xl space-y-1">
+              <div className="flex items-center space-x-1.5 text-blue-300 font-semibold text-[11px]">
+                <Zap className="w-3.5 h-3.5 flex-shrink-0 text-blue-400" />
+                <span>{isTh ? 'อัปเกรด TopBar Flyouts ทั้งหมดไม่ให้เบียดหน้าเว็บ' : 'Universal Floating Modals (Zero Page Squeezing)'}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 leading-relaxed pl-5">
+                {isTh
+                  ? 'Shield Protection, Media Extractor, Media Control, และ Downloads ทำงานเป็นหน้าต่างลอยทั้งหมด หน้าเว็บคงความกว้างเต็ม 100% ไม่ถูกบีบอัด layout อีกต่อไป'
+                  : 'Shield Protection, Media Extractor, Media Control, and Downloads now float smoothly above web content without compressing active webpage width.'}
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* VERSION 1.3.1 (HOTFIX: ADVERTISEMENT BLOCKER & BANNER PURGE) */}
         <div className="space-y-3">
           <div className="flex items-center justify-between pb-1.5 border-b border-[#2a2a38]">
@@ -429,7 +471,7 @@ export const UpdateLogModal: React.FC<UpdateLogModalProps> = ({
 
       {/* Footer */}
       <div className="flex items-center justify-between px-4 py-2.5 border-t border-[#22222a] bg-[#121216]">
-        <span className="text-[10px] text-gray-500 font-mono">Bocchy v1.3.1 Hotfix</span>
+        <span className="text-[10px] text-gray-500 font-mono">Bocchy v1.3.2 Hotfix</span>
         <button
           onClick={onClose}
           className="px-3 py-1 bg-[#262633] hover:bg-[#343444] text-white rounded-md text-[11px] font-medium transition-colors"

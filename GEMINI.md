@@ -6,7 +6,7 @@
 
 ## 📌 สรุปภาพรวมโปรเจกต์ (Project Overview)
 * **ชื่อโปรเจกต์:** Bocchy Browser (Bocchy)
-* **เวอร์ชันปัจจุบัน:** v1.3.1
+* **เวอร์ชันปัจจุบัน:** v1.3.2
 * **เทคโนโลยีหลัก:**
   * **Runtime:** Electron 34+ (Chromium 132+)
   * **Main Process:** TypeScript + esbuild (`scripts/build.mjs`, `src/main/`)

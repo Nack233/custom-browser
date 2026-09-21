@@ -53,7 +53,7 @@ const api: BrowserApi = {
   closeDownloadsFlyout: () => ipcRenderer.invoke('flyout:close'),
 
   // Universal Floating Flyouts
-  toggleFlyout: (type: 'downloads' | 'shield' | 'media-extractor' | 'media-control', topOffset?: number) =>
+  toggleFlyout: (type: 'downloads' | 'shield' | 'media-extractor' | 'media-control' | 'more-options', topOffset?: number) =>
     ipcRenderer.invoke('flyout:toggle', type, topOffset),
   closeFlyout: () => ipcRenderer.invoke('flyout:close'),
   getCurrentTabs: () => ipcRenderer.invoke('tabs:get-current'),
@@ -145,8 +145,8 @@ const api: BrowserApi = {
     };
   },
 
-  onFlyoutModeChanged: (callback: (type: 'downloads' | 'shield' | 'media-extractor' | 'media-control') => void) => {
-    const handler = (_event: any, type: 'downloads' | 'shield' | 'media-extractor' | 'media-control') => callback(type);
+  onFlyoutModeChanged: (callback: (type: 'downloads' | 'shield' | 'media-extractor' | 'media-control' | 'more-options') => void) => {
+    const handler = (_event: any, type: 'downloads' | 'shield' | 'media-extractor' | 'media-control' | 'more-options') => callback(type);
     ipcRenderer.on('flyout:set-mode', handler);
     return () => {
       ipcRenderer.removeListener('flyout:set-mode', handler);

@@ -152,8 +152,8 @@ export interface BrowserApi {
   toggleDownloadsFlyout: (topOffset?: number) => Promise<boolean>;
   closeDownloadsFlyout: () => Promise<void>;
 
-  // Universal Floating Flyouts (Downloads, Shields, Media Extractor, Media Control)
-  toggleFlyout: (type: 'downloads' | 'shield' | 'media-extractor' | 'media-control', topOffset?: number) => Promise<boolean>;
+  // Universal Floating Flyouts (Downloads, Shields, Media Extractor, Media Control, More Options)
+  toggleFlyout: (type: 'downloads' | 'shield' | 'media-extractor' | 'media-control' | 'more-options', topOffset?: number) => Promise<boolean>;
   closeFlyout: () => Promise<void>;
   getCurrentTabs: () => Promise<{ tabs: TabInfo[]; activeTabId: string }>;
   getMediaForTab: (tabId: string) => Promise<MediaItem[]>;
@@ -188,7 +188,7 @@ export interface BrowserApi {
   onDownloadComplete: (callback: (item: DownloadItemInfo) => void) => () => void;
   onDownloadsFlyoutStateChanged: (callback: (isOpen: boolean) => void) => () => void;
   onFlyoutStateChanged: (callback: (type: string | null, isOpen: boolean) => void) => () => void;
-  onFlyoutModeChanged: (callback: (type: 'downloads' | 'shield' | 'media-extractor' | 'media-control') => void) => () => void;
+  onFlyoutModeChanged: (callback: (type: 'downloads' | 'shield' | 'media-extractor' | 'media-control' | 'more-options') => void) => () => void;
   onHtmlFullScreenChange: (callback: (isFullScreen: boolean) => void) => () => void;
 }
 

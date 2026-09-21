@@ -252,10 +252,10 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         <button
           onClick={onToggleUpdateLog}
           className="flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#fa5c8d] hover:bg-[#f4477c] text-white shadow-xs transition-all"
-          title={t.whatsNew || "What's New in v1.3.1"}
+          title={t.whatsNew || "What's New in v1.3.2"}
         >
           <Sparkles className="w-3.5 h-3.5 text-pink-100 animate-pulse" />
-          <span className="text-[10px] font-mono">v1.3.1</span>
+          <span className="text-[10px] font-mono">v1.3.2</span>
         </button>
 
         {/* Force Dark Mode Quick Toggle */}

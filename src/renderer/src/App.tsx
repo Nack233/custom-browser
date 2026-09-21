@@ -15,12 +15,16 @@ import { GlobalMediaPanel } from './components/GlobalMediaPanel';
 import type { Language } from './i18n';
 
 const StandaloneFlyoutModal: React.FC = () => {
-  const [flyoutType, setFlyoutType] = useState<'downloads' | 'shield' | 'media-extractor' | 'media-control'>('downloads');
+  const [flyoutType, setFlyoutType] = useState<'downloads' | 'shield' | 'media-extractor' | 'media-control' | 'more-options'>('downloads');
   const [tabs, setTabs] = useState<TabInfo[]>([]);
   const [activeTabId, setActiveTabId] = useState<string>('');
   const [downloads, setDownloads] = useState<DownloadItemInfo[]>([]);
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [language, setLanguage] = useState<Language>('th');
+  const [forceDarkMode, setForceDarkMode] = useState(false);
+  const [showBookmarksBar, setShowBookmarksBar] = useState(true);
+  const [devModeEnabled, setDevModeEnabled] = useState(false);
+  const [recentlyClosed, setRecentlyClosed] = useState<RecentlyClosedItem[]>([]);
   const [isScanning, setIsScanning] = useState(false);
 
   useEffect(() => {
@@ -32,6 +36,7 @@ const StandaloneFlyoutModal: React.FC = () => {
     if (url.includes('modal=shield')) setFlyoutType('shield');
     else if (url.includes('modal=media-extractor')) setFlyoutType('media-extractor');
     else if (url.includes('modal=media-control')) setFlyoutType('media-control');
+    else if (url.includes('modal=more-options')) setFlyoutType('more-options');
     else setFlyoutType('downloads');
 
     window.browserApi.getCurrentTabs?.().then((info) => {
@@ -45,8 +50,12 @@ const StandaloneFlyoutModal: React.FC = () => {
     });
 
     window.browserApi.getDownloads?.().then((dls) => setDownloads(dls || []));
+    window.browserApi.getRecentlyClosed?.().then((rc) => setRecentlyClosed(rc || []));
     window.browserApi.getSettings?.().then((s) => {
       if (s?.language) setLanguage(s.language);
+      if (s?.forceDarkMode !== undefined) setForceDarkMode(s.forceDarkMode);
+      if (s?.showBookmarksBar !== undefined) setShowBookmarksBar(s.showBookmarksBar);
+      if (s?.devModeEnabled !== undefined) setDevModeEnabled(s.devModeEnabled);
     });
 
     const unbindMode = window.browserApi.onFlyoutModeChanged?.((mode) => {
@@ -199,6 +208,60 @@ const StandaloneFlyoutModal: React.FC = () => {
           topOffset={0}
         />
       )}
+      {flyoutType === 'more-options' && (
+        <MoreOptionsMenu
+          isOpen={true}
+          isFloatingModal={true}
+          onClose={handleClose}
+          language={language}
+          currentZoom={activeTab?.zoomFactor || 1.0}
+          onZoomIn={() => activeTabId && window.browserApi.zoomIn?.(activeTabId)}
+          onZoomOut={() => activeTabId && window.browserApi.zoomOut?.(activeTabId)}
+          onResetZoom={() => activeTabId && window.browserApi.resetZoom?.(activeTabId)}
+          onNewTab={() => {
+            window.browserApi.createTab?.('bocchy://newtab');
+            handleClose();
+          }}
+          onNewIncognitoTab={() => {
+            window.browserApi.createIncognitoTab?.('bocchy://newtab');
+            handleClose();
+          }}
+          showBookmarksBar={showBookmarksBar}
+          onToggleBookmarksBar={async () => {
+            const next = !showBookmarksBar;
+            setShowBookmarksBar(next);
+            await window.browserApi.updateSettings?.({ showBookmarksBar: next });
+          }}
+          onOpenDownloads={() => setFlyoutType('downloads')}
+          onOpenShield={() => setFlyoutType('shield')}
+          onOpenMedia={() => setFlyoutType('media-extractor')}
+          forceDarkMode={forceDarkMode}
+          onToggleForceDarkMode={async () => {
+            const next = !forceDarkMode;
+            setForceDarkMode(next);
+            await window.browserApi.toggleForceDarkMode?.(next);
+          }}
+          devModeEnabled={devModeEnabled}
+          onToggleDevTools={() => {
+            if (activeTabId) window.browserApi.toggleDevTools?.(activeTabId);
+            handleClose();
+          }}
+          onOpenSettings={() => {
+            window.browserApi.openSettingsTab?.();
+            handleClose();
+          }}
+          onOpenUpdateLog={() => {
+            window.browserApi.openSettingsTab?.();
+            handleClose();
+          }}
+          onRestoreClosedTab={() => {
+            window.browserApi.restoreClosedTab?.();
+            handleClose();
+          }}
+          canRestoreClosed={recentlyClosed.length > 0}
+          onOpenMediaControl={() => setFlyoutType('media-control')}
+        />
+      )}
     </div>
   );
 };
@@ -339,6 +402,7 @@ export const App: React.FC = () => {
       setIsShieldOpen(isOpen && type === 'shield');
       setIsMediaDrawerOpen(isOpen && type === 'media-extractor');
       setIsMediaControlOpen(isOpen && type === 'media-control');
+      setIsMoreOptionsOpen(isOpen && type === 'more-options');
     });
 
     // 6. Listen for HTML5 Fullscreen (YouTube/Video Fullscreen)
@@ -665,7 +729,12 @@ export const App: React.FC = () => {
           isSettingsOpen={isSettingsOpen}
           onOpenSettingsTab={() => handleOpenSettings('general')}
           isMoreOptionsOpen={isMoreOptionsOpen}
-          onToggleMoreOptions={() => setIsMoreOptionsOpen(!isMoreOptionsOpen)}
+          onToggleMoreOptions={() => {
+            const topOffset = showBookmarksBar && bookmarks.length > 0 ? 124 : 92;
+            window.browserApi.toggleFlyout?.('more-options', topOffset);
+            setIsSettingsOpen(false);
+            setIsUpdateLogOpen(false);
+          }}
           isMediaControlOpen={isMediaControlOpen}
           onToggleMediaControl={() => {
             const topOffset = showBookmarksBar && bookmarks.length > 0 ? 124 : 92;
@@ -751,52 +820,6 @@ export const App: React.FC = () => {
         topOffset={showBookmarksBar && bookmarks.length > 0 ? 124 : 92}
       />
 
-      {/* Microsoft Edge Style ... (More Options) Floating Menu */}
-      <MoreOptionsMenu
-        isOpen={isMoreOptionsOpen}
-        onClose={() => setIsMoreOptionsOpen(false)}
-        language={language}
-        currentZoom={activeTab?.zoomFactor || 1.0}
-        onZoomIn={() => activeTabId && window.browserApi.zoomIn(activeTabId)}
-        onZoomOut={() => activeTabId && window.browserApi.zoomOut(activeTabId)}
-        onResetZoom={() => activeTabId && window.browserApi.resetZoom(activeTabId)}
-        onNewTab={handleNewTab}
-        onNewIncognitoTab={handleNewIncognitoTab}
-        showBookmarksBar={showBookmarksBar}
-        onToggleBookmarksBar={handleToggleBookmarksBar}
-        onOpenDownloads={() => {
-          const topOffset = showBookmarksBar && bookmarks.length > 0 ? 124 : 92;
-          window.browserApi.toggleFlyout?.('downloads', topOffset);
-          setIsMoreOptionsOpen(false);
-          setIsUpdateLogOpen(false);
-        }}
-        onOpenShield={() => {
-          const topOffset = showBookmarksBar && bookmarks.length > 0 ? 124 : 92;
-          window.browserApi.toggleFlyout?.('shield', topOffset);
-          setIsMoreOptionsOpen(false);
-          setIsUpdateLogOpen(false);
-        }}
-        onOpenMedia={() => {
-          const topOffset = showBookmarksBar && bookmarks.length > 0 ? 124 : 92;
-          window.browserApi.toggleFlyout?.('media-extractor', topOffset);
-          setIsMoreOptionsOpen(false);
-          setIsUpdateLogOpen(false);
-        }}
-        forceDarkMode={forceDarkMode}
-        onToggleForceDarkMode={handleToggleForceDarkMode}
-        devModeEnabled={devModeEnabled}
-        onToggleDevTools={() => activeTabId && window.browserApi.toggleDevTools(activeTabId)}
-        onOpenSettings={() => handleOpenSettings('general')}
-        onOpenUpdateLog={() => handleOpenSettings('updates')}
-        onRestoreClosedTab={handleRestoreClosedTab}
-        canRestoreClosed={recentlyClosed.length > 0}
-        onOpenMediaControl={() => {
-          const topOffset = showBookmarksBar && bookmarks.length > 0 ? 124 : 92;
-          window.browserApi.toggleFlyout?.('media-control', topOffset);
-          setIsMoreOptionsOpen(false);
-          setIsUpdateLogOpen(false);
-        }}
-      />
     </div>
   );
 };

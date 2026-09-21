@@ -45,6 +45,7 @@ interface MoreOptionsMenuProps {
   onRestoreClosedTab: () => void;
   canRestoreClosed: boolean;
   onOpenMediaControl?: () => void;
+  isFloatingModal?: boolean;
 }
 
 export const MoreOptionsMenu: React.FC<MoreOptionsMenuProps> = ({
@@ -71,6 +72,7 @@ export const MoreOptionsMenu: React.FC<MoreOptionsMenuProps> = ({
   onRestoreClosedTab,
   canRestoreClosed,
   onOpenMediaControl,
+  isFloatingModal = false,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const zoomPercent = Math.round((currentZoom || 1.0) * 100);
@@ -100,10 +102,14 @@ export const MoreOptionsMenu: React.FC<MoreOptionsMenuProps> = ({
 
   if (!isOpen) return null;
 
+  const containerClass = isFloatingModal
+    ? 'w-full h-full max-h-[560px] overflow-y-auto bg-[#18181f]/95 backdrop-blur-2xl border border-pink-500/30 rounded-2xl shadow-2xl z-50 text-gray-200 text-xs py-1.5 select-none animate-in fade-in zoom-in-95 duration-100'
+    : 'fixed top-12 right-3 w-72 bg-[#202024]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 text-gray-200 text-xs py-1.5 select-none animate-in fade-in zoom-in-95 duration-100';
+
   return (
     <div
       ref={menuRef}
-      className="fixed top-12 right-3 w-72 bg-[#202024]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 text-gray-200 text-xs py-1.5 select-none animate-in fade-in zoom-in-95 duration-100"
+      className={containerClass}
     >
       {/* 1. Tabs Group */}
       <div className="px-1 space-y-0.5">
@@ -319,7 +325,7 @@ export const MoreOptionsMenu: React.FC<MoreOptionsMenuProps> = ({
             <Sparkles className="w-4 h-4 text-pink-400" />
             <span>{isTh ? 'ประวัติการอัปเดต (What\'s New)' : 'Changelog & What\'s New'}</span>
           </div>
-          <span className="text-[10px] font-mono text-pink-400 font-bold">v1.3.1</span>
+          <span className="text-[10px] font-mono text-pink-400 font-bold">v1.3.2</span>
         </button>
       </div>
     </div>

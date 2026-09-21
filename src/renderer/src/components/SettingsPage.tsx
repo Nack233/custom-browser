@@ -264,7 +264,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                   activeSection === 'updates' ? 'bg-white/25 text-white' : 'bg-pink-100 text-pink-600'
                 }`}
               >
-                v1.3.1
+                v1.3.2
               </span>
             </button>
           </nav>
@@ -273,7 +273,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         {/* Footer info */}
         <div className="pt-4 border-t border-pink-200/70 text-center">
           <p className="text-[11px] text-pink-700 font-semibold">Bocchy Browser</p>
-          <p className="text-[10px] text-gray-400 font-mono">v1.3.1 • Ultra Edition</p>
+          <p className="text-[10px] text-gray-400 font-mono">v1.3.2 • Ultra Edition</p>
         </div>
       </div>
 
@@ -689,7 +689,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                 <h2 className="text-lg font-bold text-gray-900">Bocchy Browser</h2>
                 <div className="flex items-center justify-center space-x-2 mt-1">
                   <span className="px-2.5 py-0.5 rounded-full bg-pink-500 text-white text-[11px] font-mono font-bold">
-                    v1.3.1
+                    v1.3.2
                   </span>
                   <span className="text-xs text-gray-400 font-medium">Ultra Edition</span>
                 </div>
@@ -727,7 +727,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                   {language === 'th' ? 'ประวัติการอัปเดต (Update Log)' : 'Changelog & Updates'}
                 </h1>
                 <span className="px-2.5 py-0.5 text-xs font-bold font-mono rounded-full bg-pink-500 text-white shadow-xs">
-                  v1.3.1
+                  v1.3.2
                 </span>
               </div>
               <p className="text-xs text-gray-500 mt-1">
@@ -735,6 +735,48 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                   ? 'รายละเอียดการปรับปรุง ฟีเจอร์ใหม่ และการแก้ปัญหาทั้งหมดของเบราว์เซอร์ Bocchy'
                   : 'Complete release notes, new features, and improvements in Bocchy Browser'}
               </p>
+            </div>
+
+            {/* VERSION 1.3.2 (HOTFIX: FLOATING MODALS & 3-DOT MENU) */}
+            <div className="p-5 bg-white rounded-3xl border border-pink-200 shadow-xs space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-pink-100">
+                <div className="flex items-center space-x-2.5">
+                  <span className="text-base font-bold text-pink-600 font-mono">v1.3.2</span>
+                  <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-pink-500 text-white">
+                    {language === 'th' ? 'แพตช์ด่วน (Hotfix)' : 'Hotfix'}
+                  </span>
+                </div>
+                <div className="flex items-center text-gray-400 text-xs space-x-1.5 font-medium">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>2026-09-21</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                <div className="p-4 bg-pink-50/50 rounded-2xl border border-pink-200/80 space-y-1.5">
+                  <div className="flex items-center space-x-2 text-pink-700 font-bold text-xs">
+                    <Sparkles className="w-4 h-4 text-pink-600 flex-shrink-0" />
+                    <span>{language === 'th' ? 'แก้เมนูสามจุด (...) จมหลังหน้าเว็บ' : 'Floating 3-Dot More Options Menu'}</span>
+                  </div>
+                  <p className="text-xs text-gray-600 leading-relaxed pl-6">
+                    {language === 'th'
+                      ? 'เปลี่ยนเมนูสามจุด (More Options) เป็นหน้าต่างลอย Floating Child Modal Window ลอยอยู่เหนือหน้าเว็บและ YouTube ได้อย่างสมบูรณ์แบบ ไม่ถูกหน้าเว็บทับหรือซ่อนอยู่ด้านหลังอีกต่อไป'
+                      : 'Converted the 3-dot More Options dropdown into an OS-level floating child modal that sits on top of WebContentsView and YouTube videos without being obscured.'}
+                  </p>
+                </div>
+
+                <div className="p-4 bg-purple-50/50 rounded-2xl border border-purple-200/80 space-y-1.5">
+                  <div className="flex items-center space-x-2 text-purple-700 font-bold text-xs">
+                    <Maximize2 className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                    <span>{language === 'th' ? 'ระบบหน้าต่างลอยสมบูรณ์แบบ ไม่บีบหน้าเว็บ' : 'Universal Floating Modals (Zero Layout Shift)'}</span>
+                  </div>
+                  <p className="text-xs text-gray-600 leading-relaxed pl-6">
+                    {language === 'th'
+                      ? 'ปุ่มเครื่องมือทั้งหมดบนแถบ TopBar (ดาวน์โหลด, AdShield, มีเดีย, ควบคุมเสียง, สามจุด) ทำงานเป็นอิสระ หน้าเว็บรักษาความกว้าง 100% เต็มจอ ไม่มีการบีบหน้าเว็บหรือเบียดเนื้อหา'
+                      : 'All top-bar tools (Downloads, AdShield, Sniffer, Volume Mixer, More Options) now float above content with zero layout shift or web view squeezing.'}
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* VERSION 1.3.1 (HOTFIX: ADVERTISEMENT BLOCKER) */}
