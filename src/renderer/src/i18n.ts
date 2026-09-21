@@ -133,9 +133,19 @@ export const translations = {
     openDevTools: 'เปิด DevTools ตรวจสอบแท็บ (F12)',
     openAppDevTools: 'ตรวจสอบโครงสร้าง UI เบราว์เซอร์',
     updateLog: 'ประวัติการอัปเดต (Update Log)',
-    whatsNew: 'มีอะไรใหม่ใน v1.1.0 🎉',
+    whatsNew: 'มีอะไรใหม่ใน v1.3.0 🎉',
     changelog: 'บันทึกการเปลี่ยนแปลง',
     viewUpdateLog: 'ดูสิ่งใหม่ในอัปเดต',
+
+    // Global Media Panel & Volume Mixer
+    mediaControl: 'ศูนย์ควบคุมสื่อ (Media Control)',
+    volumeMixer: 'ตัวปรับระดับเสียงแยกแท็บ (Volume Mixer)',
+    nowPlaying: 'กำลังเล่นมีเดีย',
+    noMediaPlaying: 'ไม่มีแท็บที่กำลังเล่นเพลงหรือวิดีโอ',
+    muteAll: 'ปิดเสียงทุกแท็บ',
+    unmuteAll: 'เปิดเสียงทุกแท็บ',
+    pauseAll: 'หยุดเล่นทุกแท็บ',
+    jumpToTab: 'ไปยังแท็บนี้',
   },
   en: {
     // Navigation
@@ -269,8 +279,18 @@ export const translations = {
     openDevTools: 'Open Tab DevTools (F12)',
     openAppDevTools: 'Inspect Browser UI',
     updateLog: 'Update Log',
-    whatsNew: "What's New in v1.1.0 🎉",
+    whatsNew: "What's New in v1.3.0 🎉",
     changelog: 'Changelog',
     viewUpdateLog: 'View Changelog',
+
+    // Global Media Panel & Volume Mixer
+    mediaControl: 'Media Control',
+    volumeMixer: 'Volume Mixer',
+    nowPlaying: 'Now Playing',
+    noMediaPlaying: 'No tabs currently playing audio',
+    muteAll: 'Mute All',
+    unmuteAll: 'Unmute All',
+    pauseAll: 'Pause All',
+    jumpToTab: 'Jump to Tab',
   },
 };

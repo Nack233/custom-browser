@@ -12,6 +12,46 @@
 
 ---
 
+## 🎵 มีอะไรใหม่ในเวอร์ชัน 1.3.0 (Global Media Panel & Volume Mixer)
+* **🎛️ ศูนย์ควบคุมสื่อส่วนกลาง (Global Media Panel):**
+  * เพิ่มปุ่มไอคอนตัวโน้ตเพลง 🎵 บน Navigation Bar และในเมนู `...` (More Options)
+  * แสดงรายการแท็บที่กำลังเล่นเพลงหรือวิดีโอ (YouTube, Spotify, SoundCloud, Twitch ฯลฯ) พร้อมคลื่นสัญญาณเสียง Equalizer แบบสด
+  * ปุ่ม **Play / Pause (▶ / ⏸)** และ **Mute (🔊 / 🔇)** ควบคุมแท็บมีเดียได้ทันทีโดยไม่ต้องสลับหน้าจอ
+  * คลิกที่การ์ดเพื่อกระโดดไปยังแท็บนั้นได้ทันที (Quick Tab Switch)
+* **🎚️ ตัวปรับระดับเสียงแยกเว็บไซต์สไตล์ Windows Volume Mixer:**
+  * ปรับระดับเสียงแยกของแต่ละเว็บไซต์ได้อย่างอิสระ (0% - 100%) เช่น YouTube 80%, Spotify 60%, Discord 20%
+  * แสดงระดับความดังด้วย **ASCII Volume Meter** สุดคลาสสิก:
+    ```text
+    YouTube       ████████░░ 80%
+    Spotify       ██████░░░░ 60%
+    Discord       ██░░░░░░░░ 20%
+    ```
+  * สไลเดอร์ปรับระดับเสียงลากปรับได้ลื่นไหลแบบ Real-time พร้อมปุ่ม Mute เฉพาะแท็บ
+  * ปุ่มมาสเตอร์คอนโทรล: **"ปิดเสียงทุกแท็บ (Mute All)"** และ **"หยุดเล่นทั้งหมด (Pause All)"** ในคลิกเดียว
+* **🖥️ ระบบขยายวิดีโอเต็มจอจริง 100% (True HTML5 Fullscreen):**
+  * แก้ไขปัญหาการกดขยายเต็มจอ (ปุ่ม `[ ]` หรือกด `f`) บน YouTube/Netflix/วิดีโออื่นๆ แล้วติดแถบ TopBar ด้านบน
+  * ดักจับอีเวนต์ `enter-html-full-screen` เพื่อขยาย WebContentsView เต็มขอบจอ `(0, 0, width, height)` พร้อมสั่ง BrowserWindow เข้าสู่ OS Fullscreen โดยอัตโนมัติ
+  * ซ่อนแถบ TopBar และ BookmarksBar ขณะดูวิดีโอเต็มจอ เพื่อประสบการณ์การรับชมแบบไร้ขอบ 100%
+  * กดปุ่ม `Escape` หรือ `f` เพื่อออกจากโหมดเต็มจอ และดึงแถบเครื่องมือกลับมาอย่างนุ่มนวล
+
+---
+
+## ⚡ มีอะไรใหม่ในเวอร์ชัน 1.2.1 (Performance Hotfix & CPU Optimization)
+* **🔥 ลดภาระการทำงานของ CPU ลงอย่างมหาศาล (Drastic CPU Reduction):**
+  * **MediaSniffer Early-Return**: กรองเฉพาะ HTTP Content-Type ที่เป็น Media (`video/*`, `image/*`, `.m3u8`, `.mp4` ฯลฯ) ข้าม Network Request ทั่วไปกว่า 95% (เช่น HTML, CSS, JS, Fonts, XHR) ทันที แก้ปัญหา CPU พุ่งเวลาเปิด YouTube หรือเว็บขนาดใหญ่
+  * **Ultra-fast FNV-1a Hash**: เลิกใช้ crypto MD5 ที่กินพลังประมวลผลสูง หันมาใช้ Fast FNV-1a Hash ที่เบาและเร็วกว่าหลายเท่าตัว
+* **🛡️ ระบบแคชโฆษณาความเร็วสูง (High-Speed LRU Cache for AdBlocker):**
+  * เพิ่ม LRU Cache ขนาด 1,000 รายการ ช่วยจำ URL ที่เคยตรวจสอบแล้ว ไม่ต้องรัน Regex/String tests ซ้ำหลายสิบขั้นตอนต่อ 1 request
+  * เปลี่ยนระบบตรวจสอบชื่อโดเมนเป็น `Set.has()` เช็ค suffix ทันทีที่ระดับ $O(1)$
+  * นำ `console.log` สแปมตอนบล็อกโฆษณาออกทั้งหมด เพื่อลด Overhead บน Node.js runtime
+* **⏱️ ระบบหน่วงเวลา IPC (Debounced Tab Updates):**
+  * เพิ่มตัวหน่วงเวลา (150ms debounce) ให้กับ `notifyTabsUpdated()` รวมอีเวนต์โหลดหน้าเว็บที่เกิดถี่ ๆ มารายงานในรอบเดียว ลด React Re-render ซ้ำซ้อน
+  * คงความเร็วระดับทันที (`notifyTabsUpdatedImmediate()`) สำหรับการสลับแท็บและการปิดแท็บ
+* **🎯 สแกนมีเดียในหน้าเว็บแบบ On-Demand:**
+  * ยกเลิกการ inject JS ไปสแกนรูปภาพและวิดีโอทั้ง DOM อัตโนมัติทุกครั้งที่โหลดหน้าเว็บเสร็จ หันมาสแกนเฉพาะเวลาที่เปิดหน้าต่าง Media Drawer เท่านั้น
+
+---
+
 ## 🚀 มีอะไรใหม่ในเวอร์ชัน 1.2.0 (What's New in v1.2.0)
 * **⚙️ หน้าการตั้งค่าแบบเต็มแท็บ (`bocchy://settings`):**
   * เปลี่ยนหน้า Settings จาก Drawer ด้านข้างที่เคยบีบหน้าเว็บ มาเป็นแท็บเฉพาะของตัวเอง (เหมือน `chrome://settings` และ `edge://settings`)

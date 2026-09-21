@@ -18,6 +18,7 @@ import {
   Sparkles,
   X,
   RotateCcw,
+  Music,
 } from 'lucide-react';
 
 interface MoreOptionsMenuProps {
@@ -43,6 +44,7 @@ interface MoreOptionsMenuProps {
   onOpenUpdateLog: () => void;
   onRestoreClosedTab: () => void;
   canRestoreClosed: boolean;
+  onOpenMediaControl?: () => void;
 }
 
 export const MoreOptionsMenu: React.FC<MoreOptionsMenuProps> = ({
@@ -68,6 +70,7 @@ export const MoreOptionsMenu: React.FC<MoreOptionsMenuProps> = ({
   onOpenUpdateLog,
   onRestoreClosedTab,
   canRestoreClosed,
+  onOpenMediaControl,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const zoomPercent = Math.round((currentZoom || 1.0) * 100);
@@ -237,6 +240,22 @@ export const MoreOptionsMenu: React.FC<MoreOptionsMenuProps> = ({
           </div>
         </button>
 
+        {onOpenMediaControl && (
+          <button
+            onClick={() => {
+              onOpenMediaControl();
+              onClose();
+            }}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-white/10 transition-colors group text-left"
+          >
+            <div className="flex items-center space-x-3">
+              <Music className="w-4 h-4 text-pink-400 group-hover:text-pink-300" />
+              <span>{isTh ? 'ควบคุมสื่อ & ผสมเสียง (Media Control)' : 'Media Control & Volume Mixer'}</span>
+            </div>
+            <span className="text-[10px] font-mono text-pink-400 bg-pink-500/15 px-1.5 py-0.5 rounded">NEW</span>
+          </button>
+        )}
+
         <button
           onClick={() => {
             onToggleForceDarkMode();
@@ -300,7 +319,7 @@ export const MoreOptionsMenu: React.FC<MoreOptionsMenuProps> = ({
             <Sparkles className="w-4 h-4 text-pink-400" />
             <span>{isTh ? 'ประวัติการอัปเดต (What\'s New)' : 'Changelog & What\'s New'}</span>
           </div>
-          <span className="text-[10px] font-mono text-pink-400 font-bold">v1.2.0</span>
+          <span className="text-[10px] font-mono text-pink-400 font-bold">v1.3.0</span>
         </button>
       </div>
     </div>

@@ -153,6 +153,10 @@ export interface BrowserApi {
   // Per-Tab Audio & Volume Control
   setTabVolume: (tabId: string, volume: number) => Promise<void>;
   toggleTabMute: (tabId: string) => Promise<boolean>;
+  toggleMediaPlayback: (tabId: string) => Promise<boolean>;
+  muteAllAudio: () => Promise<void>;
+  unmuteAllAudio: () => Promise<void>;
+  pauseAllMedia: () => Promise<void>;
 
   // Page Zoom Controls
   setTabZoom: (tabId: string, zoomFactor: number) => Promise<number>;
@@ -174,6 +178,7 @@ export interface BrowserApi {
   onZipProgress: (callback: (data: { current: number; total: number; percent: number; status: string }) => void) => () => void;
   onDownloadProgress: (callback: (item: DownloadItemInfo) => void) => () => void;
   onDownloadComplete: (callback: (item: DownloadItemInfo) => void) => () => void;
+  onHtmlFullScreenChange: (callback: (isFullScreen: boolean) => void) => () => void;
 }
 
 declare global {

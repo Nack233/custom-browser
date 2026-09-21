@@ -92,6 +92,7 @@ export class WindowStateManager {
   public manage(window: BrowserWindow) {
     const updateState = () => {
       if (!window || window.isDestroyed()) return;
+      if (window.isFullScreen()) return; // Don't overwrite normal bounds with fullscreen bounds
 
       const isMaximized = window.isMaximized();
       if (!isMaximized && !window.isMinimized()) {

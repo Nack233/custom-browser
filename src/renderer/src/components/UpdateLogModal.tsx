@@ -18,6 +18,9 @@ import {
   Heart,
   Maximize2,
   Settings,
+  Cpu,
+  Music,
+  Sliders,
 } from 'lucide-react';
 
 interface UpdateLogModalProps {
@@ -31,7 +34,7 @@ export const UpdateLogModal: React.FC<UpdateLogModalProps> = ({
   isOpen,
   onClose,
   language,
-  topOffset = 78,
+  topOffset = 92,
 }) => {
   if (!isOpen) return null;
 
@@ -39,13 +42,13 @@ export const UpdateLogModal: React.FC<UpdateLogModalProps> = ({
 
   return (
     <div
-      className="fixed right-0 bottom-0 w-[440px] bg-[#16161c] border-l border-[#282834] z-50 flex flex-col shadow-2xl select-none animate-in slide-in-from-right duration-200"
+      className="fixed right-3 z-50 w-96 max-h-[80vh] flex flex-col bg-[#18181f]/95 backdrop-blur-xl border border-pink-500/30 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150"
       style={{ top: `${topOffset}px` }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#252530] bg-[#141419]">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#2a2a38] bg-[#14141a]/60">
         <div className="flex items-center space-x-2.5">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-500/30 text-pink-400">
+          <div className="w-7 h-7 rounded-lg bg-pink-500/20 border border-pink-500/30 flex items-center justify-center text-pink-400 shadow-xs">
             <Sparkles className="w-4 h-4" />
           </div>
           <div>
@@ -54,11 +57,11 @@ export const UpdateLogModal: React.FC<UpdateLogModalProps> = ({
                 {isTh ? 'ประวัติการอัปเดต (Update Log)' : 'Changelog & Updates'}
               </h2>
               <span className="px-1.5 py-0.2 text-[9px] font-bold font-mono uppercase rounded bg-pink-500/20 text-pink-300 border border-pink-500/30">
-                v1.2.0
+                v1.3.0
               </span>
             </div>
             <p className="text-[10px] text-gray-400 mt-0.5">
-              {isTh ? 'การปรับปรุงครั้งใหญ่: Dedicated Settings & เมนู ...' : 'Major release: Dedicated Settings & ... Menu'}
+              {isTh ? 'v1.3.0: Media Control & Windows Volume Mixer' : 'v1.3.0: Media Control & Windows Volume Mixer'}
             </p>
           </div>
         </div>
@@ -73,13 +76,97 @@ export const UpdateLogModal: React.FC<UpdateLogModalProps> = ({
 
       {/* Body Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-5 text-xs text-gray-300 no-scrollbar">
+        {/* VERSION 1.3.0 (FEATURE RELEASE: MEDIA CONTROL & VOLUME MIXER) */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between pb-1.5 border-b border-[#2a2a38]">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-bold text-pink-400 font-mono">v1.3.0</span>
+              <span className="px-1.5 py-0.2 text-[9px] font-semibold rounded bg-pink-500/20 text-pink-300 border border-pink-500/30">
+                {isTh ? 'เวอร์ชันใหม่ล่าสุด' : 'Latest Feature Release'}
+              </span>
+            </div>
+            <div className="flex items-center text-gray-500 text-[10px] space-x-1">
+              <Calendar className="w-3 h-3" />
+              <span>2026-09-21</span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="p-3 bg-[#241328] border border-pink-500/30 rounded-xl space-y-1">
+              <div className="flex items-center space-x-1.5 text-pink-300 font-semibold text-[11px]">
+                <Music className="w-3.5 h-3.5 flex-shrink-0 text-pink-400" />
+                <span>{isTh ? 'ศูนย์ควบคุมสื่อ (Global Media Panel)' : 'Global Media Panel'}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 leading-relaxed pl-5">
+                {isTh
+                  ? 'ควบคุมการเล่นเพลงและวิดีโอ (YouTube, Spotify, SoundCloud ฯลฯ) ได้จากหน้าต่างลอยเดียว รองรับการกด Pause/Play, Mute และสลับไปยังแท็บมีเดียได้ทันทีในคลิกเดียว'
+                  : 'Centralized media playback controls for YouTube, Spotify, SoundCloud, and more with Play/Pause, Muting, and quick tab jump.'}
+              </p>
+            </div>
+
+            <div className="p-3 bg-[#1e1a2f] border border-purple-500/30 rounded-xl space-y-1">
+              <div className="flex items-center space-x-1.5 text-purple-300 font-semibold text-[11px]">
+                <Sliders className="w-3.5 h-3.5 flex-shrink-0 text-purple-400" />
+                <span>{isTh ? 'ตัวปรับระดับเสียงแยกแท็บ (Windows Volume Mixer Style)' : 'Windows-Style Tab Volume Mixer'}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 leading-relaxed pl-5">
+                {isTh
+                  ? 'ปรับระดับเสียงของแต่ละเว็บไซต์แยกกันได้อย่างอิสระ (เช่น YouTube 80%, Spotify 60%, Discord 20%) พร้อมกราฟแท่งระดับเสียง ████████░░ และปุ่ม Mute All / Unmute All'
+                  : 'Independent per-website volume sliders with ASCII volume meters (████████░░ 80%) and global Mute/Unmute All master controls.'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* VERSION 1.2.1 (HOTFIX) */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between pb-1.5 border-b border-[#2a2a38]">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-bold text-pink-400 font-mono">v1.2.1</span>
+              <span className="px-1.5 py-0.2 text-[9px] font-semibold rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                {isTh ? 'แพตช์ด่วนปรับปรุงความเร็ว' : 'Performance Hotfix'}
+              </span>
+            </div>
+            <div className="flex items-center text-gray-500 text-[10px] space-x-1">
+              <Calendar className="w-3 h-3" />
+              <span>2026-09-21</span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="p-3 bg-[#1e251e] border border-emerald-500/30 rounded-xl space-y-1">
+              <div className="flex items-center space-x-1.5 text-emerald-300 font-semibold text-[11px]">
+                <Cpu className="w-3.5 h-3.5 flex-shrink-0 text-emerald-400" />
+                <span>{isTh ? 'ลดการกิน CPU ลงอย่างมหาศาล (CPU Optimization)' : 'Drastic CPU Reduction'}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 leading-relaxed pl-5">
+                {isTh
+                  ? 'แก้ปัญหาเบราว์เซอร์กิน CPU สูงเวลาเปิดเว็บหนักๆ หรือเปิด YouTube ด้วยการกรอง MediaSniffer เฉพาะไฟล์มีเดีย (Early-return), ปรับใช้ Fast FNV-1a Hash แทน MD5 และเพิ่มระบบ LRU Cache ให้กับ AdBlocker'
+                  : 'Resolved high CPU usage during web browsing and YouTube playback with media-only early returns in MediaSniffer, lightweight FNV-1a hashing, and LRU domain caching in AdBlocker.'}
+              </p>
+            </div>
+
+            <div className="p-3 bg-[#171e2b] border border-blue-500/30 rounded-xl space-y-1">
+              <div className="flex items-center space-x-1.5 text-blue-300 font-semibold text-[11px]">
+                <Zap className="w-3.5 h-3.5 flex-shrink-0 text-blue-400" />
+                <span>{isTh ? 'ระบบ IPC Throttling & On-Demand Media Scan' : 'IPC Debounce & On-Demand Media Scan'}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 leading-relaxed pl-5">
+                {isTh
+                  ? 'เพิ่มตัวหน่วงเวลา (Debounce 150ms) ให้กับ Tab Update IPC ลดการ Re-render ซ้ำซ้อนของ React ขณะโหลดหน้าเว็บ และเปลี่ยนการสแกนรูปภาพ/มีเดียในหน้าเว็บเป็น On-demand สแกนเมื่อเปิดแถบ Media Drawer เท่านั้น'
+                  : 'Debounced high-frequency tab events (150ms) to eliminate React re-render spikes, and switched DOM media scanning to strictly on-demand.'}
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* VERSION 1.2.0 */}
         <div className="space-y-3">
           <div className="flex items-center justify-between pb-1.5 border-b border-[#2a2a38]">
             <div className="flex items-center space-x-2">
               <span className="text-sm font-bold text-pink-400 font-mono">v1.2.0</span>
               <span className="px-1.5 py-0.2 text-[9px] font-semibold rounded bg-pink-500/20 text-pink-300 border border-pink-500/30">
-                {isTh ? 'เวอร์ชันใหม่ล่าสุด' : 'Latest Major'}
+                {isTh ? 'เวอร์ชันหลัก' : 'Major Release'}
               </span>
             </div>
             <div className="flex items-center text-gray-500 text-[10px] space-x-1">

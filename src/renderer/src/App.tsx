@@ -11,6 +11,7 @@ import { SettingsPage } from './components/SettingsPage';
 import { MoreOptionsMenu } from './components/MoreOptionsMenu';
 import { DownloadsFlyout } from './components/DownloadsFlyout';
 import { UpdateLogModal } from './components/UpdateLogModal';
+import { GlobalMediaPanel } from './components/GlobalMediaPanel';
 import type { Language } from './i18n';
 
 export const App: React.FC = () => {
@@ -34,6 +35,8 @@ export const App: React.FC = () => {
   const [isUpdateLogOpen, setIsUpdateLogOpen] = useState(false);
   const [devModeEnabled, setDevModeEnabled] = useState(false);
   const [isMoreOptionsOpen, setIsMoreOptionsOpen] = useState(false);
+  const [isMediaControlOpen, setIsMediaControlOpen] = useState(false);
+  const [isHtmlFullScreen, setIsHtmlFullScreen] = useState(false);
   const [settingsSection, setSettingsSection] = useState<'general' | 'language' | 'dns' | 'performance' | 'about' | 'updates'>('general');
 
   const handleOpenSettings = async (section: 'general' | 'language' | 'dns' | 'performance' | 'about' | 'updates' = 'general') => {
@@ -44,6 +47,7 @@ export const App: React.FC = () => {
     setIsShieldOpen(false);
     setIsMediaDrawerOpen(false);
     setIsMoreOptionsOpen(false);
+    setIsMediaControlOpen(false);
     await window.browserApi.openSettingsTab();
   };
 
@@ -78,10 +82,11 @@ export const App: React.FC = () => {
     refreshRecentlyClosed();
 
     // 1. Listen for tab updates
+    // PERF: Don't call refreshRecentlyClosed() on every tab update — it's only needed
+    // when tabs are actually closed (see handleCloseTab and keyboard shortcuts)
     const unbindTabs = window.browserApi.onTabsUpdated((updatedTabs, currentActiveId) => {
       setTabs(updatedTabs);
       setActiveTabId(currentActiveId);
-      refreshRecentlyClosed();
     });
 
     // 2. Listen for media discovered via network sniffing
@@ -130,12 +135,26 @@ export const App: React.FC = () => {
       });
     });
 
+    // 5. Listen for HTML5 Fullscreen (YouTube/Video Fullscreen)
+    const unbindFs = window.browserApi.onHtmlFullScreenChange?.((isFs) => {
+      setIsHtmlFullScreen(isFs);
+      if (isFs) {
+        setIsMediaControlOpen(false);
+        setIsDownloadsOpen(false);
+        setIsShieldOpen(false);
+        setIsMediaDrawerOpen(false);
+        setIsMoreOptionsOpen(false);
+        setIsUpdateLogOpen(false);
+      }
+    });
+
     return () => {
       unbindTabs();
       unbindMedia();
       unbindAdBlock();
       unbindDlProgress?.();
       unbindDlComplete?.();
+      unbindFs?.();
     };
   }, [refreshRecentlyClosed]);
 
@@ -174,10 +193,14 @@ export const App: React.FC = () => {
         e.preventDefault();
         if (activeTabId) window.browserApi.zoomOut(activeTabId);
       }
-      // Reset Zoom: Ctrl + 0
-      else if ((e.ctrlKey || e.metaKey) && e.key === '0') {
-        e.preventDefault();
-        if (activeTabId) window.browserApi.resetZoom(activeTabId);
+      // Escape: Close any open drawer or panel
+      else if (e.key === 'Escape') {
+        setIsMediaControlOpen(false);
+        setIsDownloadsOpen(false);
+        setIsShieldOpen(false);
+        setIsMediaDrawerOpen(false);
+        setIsMoreOptionsOpen(false);
+        setIsUpdateLogOpen(false);
       }
     };
 
@@ -194,8 +217,9 @@ export const App: React.FC = () => {
     else if (isShieldOpen) width = 340;
     else if (isMoreOptionsOpen) width = 300;
     else if (isUpdateLogOpen) width = 440;
+    else if (isMediaControlOpen) width = 440;
     window.browserApi.setSidebarWidth(width);
-  }, [isMediaDrawerOpen, isDownloadsOpen, isShieldOpen, isMoreOptionsOpen, isUpdateLogOpen]);
+  }, [isMediaDrawerOpen, isDownloadsOpen, isShieldOpen, isMoreOptionsOpen, isUpdateLogOpen, isMediaControlOpen]);
 
   // Sync TopBar Height when Bookmarks bar is toggled or visible
   useEffect(() => {
@@ -225,6 +249,7 @@ export const App: React.FC = () => {
 
   const handleCloseTab = (tabId: string) => {
     window.browserApi.closeTab(tabId);
+    refreshRecentlyClosed();
   };
 
   const handleNewTab = () => {
@@ -364,7 +389,8 @@ export const App: React.FC = () => {
   return (
     <div className="flex flex-col h-screen w-screen bg-[#fff0f6] text-gray-900 overflow-hidden select-none">
       {/* Top Bar Container: TabBar (44px) + NavigationBar (48px) + optional BookmarksBar (32px) */}
-      <header className="flex-shrink-0 z-30 shadow-sm">
+      {!isHtmlFullScreen && (
+        <header className="flex-shrink-0 z-30 shadow-sm">
         <TabBar
           tabs={tabs}
           activeTabId={activeTabId}
@@ -395,11 +421,15 @@ export const App: React.FC = () => {
             setIsUpdateLogOpen(false);
           }}
           onToggleMediaDrawer={() => {
-            setIsMediaDrawerOpen(!isMediaDrawerOpen);
+            const next = !isMediaDrawerOpen;
+            setIsMediaDrawerOpen(next);
             setIsShieldOpen(false);
             setIsSettingsOpen(false);
             setIsDownloadsOpen(false);
             setIsUpdateLogOpen(false);
+            if (next) {
+              handleRefreshScan();
+            }
           }}
           onToggleSettings={() => {
             setIsSettingsOpen(!isSettingsOpen);
@@ -442,16 +472,31 @@ export const App: React.FC = () => {
           onOpenSettingsTab={() => handleOpenSettings('general')}
           isMoreOptionsOpen={isMoreOptionsOpen}
           onToggleMoreOptions={() => setIsMoreOptionsOpen(!isMoreOptionsOpen)}
+          isMediaControlOpen={isMediaControlOpen}
+          onToggleMediaControl={() => {
+            const next = !isMediaControlOpen;
+            setIsMediaControlOpen(next);
+            if (next) {
+              setIsShieldOpen(false);
+              setIsMediaDrawerOpen(false);
+              setIsSettingsOpen(false);
+              setIsDownloadsOpen(false);
+              setIsUpdateLogOpen(false);
+              setIsMoreOptionsOpen(false);
+            }
+          }}
+          hasActiveAudio={tabs.some((t) => t.isPlayingAudio)}
         />
-        {showBookmarksBar && bookmarks.length > 0 && (
-          <BookmarksBar
-            bookmarks={bookmarks}
-            onNavigate={handleNavigate}
-            onOpenInNewTab={(url) => window.browserApi.createTab(url)}
-            onRemoveBookmark={handleRemoveBookmark}
-          />
-        )}
-      </header>
+          {showBookmarksBar && bookmarks.length > 0 && (
+            <BookmarksBar
+              bookmarks={bookmarks}
+              onNavigate={handleNavigate}
+              onOpenInNewTab={(url) => window.browserApi.createTab(url)}
+              onRemoveBookmark={handleRemoveBookmark}
+            />
+          )}
+        </header>
+      )}
 
       {/* Main Content Area:
           1. If current tab is bocchy://settings, render the full SettingsPage!
@@ -590,6 +635,25 @@ export const App: React.FC = () => {
         onOpenUpdateLog={() => handleOpenSettings('updates')}
         onRestoreClosedTab={handleRestoreClosedTab}
         canRestoreClosed={recentlyClosed.length > 0}
+        onOpenMediaControl={() => {
+          setIsMediaControlOpen(true);
+          setIsShieldOpen(false);
+          setIsMediaDrawerOpen(false);
+          setIsDownloadsOpen(false);
+          setIsUpdateLogOpen(false);
+        }}
+      />
+
+      {/* Global Media Panel & Volume Mixer (Windows-style) */}
+      <GlobalMediaPanel
+        isOpen={isMediaControlOpen}
+        onClose={() => setIsMediaControlOpen(false)}
+        tabs={tabs}
+        activeTabId={activeTabId}
+        onSwitchTab={handleSelectTab}
+        onCloseTab={handleCloseTab}
+        language={language}
+        topOffset={showBookmarksBar && bookmarks.length > 0 ? 124 : 92}
       />
     </div>
   );

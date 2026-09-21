@@ -14,6 +14,10 @@ export class AdBlockService {
   private blockRedirects: boolean = true;
   private onBlockedCallback?: (tabId: string, url: string, total: number) => void;
 
+  // PERF: LRU cache for isAdOrTracker results (avoids re-checking same URLs)
+  private urlCheckCache: Map<string, boolean> = new Map();
+  private static readonly URL_CACHE_MAX_SIZE = 1000;
+
   // Curated list of high-traffic ad networks, tracking telemetry, and popunder engines
   private blockedDomains = new Set([
     'doubleclick.net',
@@ -109,8 +113,7 @@ export class AdBlockService {
           return callback({ cancel: false });
         }
 
-        if (this.isAdOrTracker(url)) {
-          console.log(`[AdBlock Blocked] [${tabId}] ${url.substring(0, 80)}`);
+        if (this.isAdOrTrackerCached(url)) {
           this.recordBlocked(tabId, url);
           return callback({ cancel: true });
         }
@@ -118,6 +121,27 @@ export class AdBlockService {
         callback({ cancel: false });
       }
     );
+  }
+
+  // PERF: Cached wrapper for isAdOrTracker with LRU eviction
+  public isAdOrTrackerCached(urlStr: string): boolean {
+    const cached = this.urlCheckCache.get(urlStr);
+    if (cached !== undefined) return cached;
+
+    const result = this.isAdOrTracker(urlStr);
+
+    // LRU eviction: delete oldest entries when cache is full
+    if (this.urlCheckCache.size >= AdBlockService.URL_CACHE_MAX_SIZE) {
+      const firstKey = this.urlCheckCache.keys().next().value;
+      if (firstKey !== undefined) this.urlCheckCache.delete(firstKey);
+    }
+    this.urlCheckCache.set(urlStr, result);
+    return result;
+  }
+
+  // PERF: Clear cache when toggle states change
+  private clearUrlCache() {
+    this.urlCheckCache.clear();
   }
 
   public isAdOrTracker(urlStr: string): boolean {
@@ -135,11 +159,13 @@ export class AdBlockService {
         }
       }
 
-      // 2. Check exact hostname or suffix match against known ad domains
-      for (const domain of this.blockedDomains) {
-        if (host === domain || host.endsWith('.' + domain) || urlStr.includes(domain)) {
-          return true;
-        }
+      // 2. PERF: Check exact hostname or suffix match using Set-based lookup
+      // Check host itself and each parent domain suffix
+      if (this.blockedDomains.has(host)) return true;
+      const parts = host.split('.');
+      for (let i = 1; i < parts.length; i++) {
+        const suffix = parts.slice(i).join('.');
+        if (this.blockedDomains.has(suffix)) return true;
       }
 
       // 3. Check path patterns
@@ -220,11 +246,13 @@ export class AdBlockService {
 
   public toggleBlockGifAds(): boolean {
     this.blockGifAds = !this.blockGifAds;
+    this.clearUrlCache();
     return this.blockGifAds;
   }
 
   public toggleBlockRedirects(): boolean {
     this.blockRedirects = !this.blockRedirects;
+    this.clearUrlCache();
     return this.blockRedirects;
   }
 

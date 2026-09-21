@@ -20,6 +20,7 @@ import {
   Sparkles,
   Code2,
   MoreHorizontal,
+  Music,
 } from 'lucide-react';
 import type { Language } from '../i18n';
 import { translations } from '../i18n';
@@ -57,6 +58,9 @@ interface NavigationBarProps {
   onOpenSettingsTab: () => void;
   isMoreOptionsOpen: boolean;
   onToggleMoreOptions: () => void;
+  isMediaControlOpen: boolean;
+  onToggleMediaControl: () => void;
+  hasActiveAudio?: boolean;
 }
 
 export const NavigationBar: React.FC<NavigationBarProps> = ({
@@ -92,6 +96,9 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
   onOpenSettingsTab,
   isMoreOptionsOpen,
   onToggleMoreOptions,
+  isMediaControlOpen,
+  onToggleMediaControl,
+  hasActiveAudio = false,
 }) => {
   const [inputUrl, setInputUrl] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -245,10 +252,10 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         <button
           onClick={onToggleUpdateLog}
           className="flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#fa5c8d] hover:bg-[#f4477c] text-white shadow-xs transition-all"
-          title={t.whatsNew || "What's New in v1.2.0"}
+          title={t.whatsNew || "What's New in v1.3.0"}
         >
           <Sparkles className="w-3.5 h-3.5 text-pink-100 animate-pulse" />
-          <span className="text-[10px] font-mono">v1.2.0</span>
+          <span className="text-[10px] font-mono">v1.3.0</span>
         </button>
 
         {/* Force Dark Mode Quick Toggle */}
@@ -338,6 +345,27 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
           {activeDownloadsCount > 0 && (
             <span className="absolute -top-1 -right-1 px-1.5 py-0.2 text-[9px] bg-pink-600 text-white rounded-full font-mono font-bold">
               {activeDownloadsCount}
+            </span>
+          )}
+        </button>
+
+        {/* Media Control & Volume Mixer Button */}
+        <button
+          onClick={onToggleMediaControl}
+          className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors relative ${
+            isMediaControlOpen
+              ? 'bg-[#fa5c8d] text-white shadow-xs'
+              : hasActiveAudio
+              ? 'bg-pink-100 text-pink-700 border border-pink-300 hover:bg-pink-200'
+              : 'text-gray-650 hover:text-gray-950 hover:bg-pink-200/60'
+          }`}
+          title={t.mediaControl || 'Media Control & Volume Mixer'}
+        >
+          <Music className={`w-4 h-4 ${hasActiveAudio ? 'text-pink-600 animate-pulse' : ''}`} />
+          {hasActiveAudio && (
+            <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-pink-500" />
             </span>
           )}
         </button>

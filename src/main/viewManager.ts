@@ -66,6 +66,11 @@ export class ViewManager {
   private localeManager?: LocaleManager;
   private currentLanguage: 'th' | 'en' = 'th';
   private contextMenuManager: ContextMenuManager;
+  // PERF: Debounce timer for notifyTabsUpdated to prevent IPC flood
+  private notifyDebounceTimer: NodeJS.Timeout | null = null;
+  // Fullscreen state
+  private isHtmlFullScreen: boolean = false;
+  private wasWindowFullScreenBeforeHtml: boolean = false;
 
   constructor(
     mainWindow: BrowserWindow,
@@ -167,6 +172,20 @@ export class ViewManager {
       this.updateActiveViewBounds();
     });
 
+    this.mainWindow.on('enter-full-screen', () => {
+      this.updateActiveViewBounds();
+    });
+
+    this.mainWindow.on('leave-full-screen', () => {
+      if (this.isHtmlFullScreen) {
+        const tab = this.activeTabId ? this.tabs.get(this.activeTabId) : null;
+        if (tab?.view && !tab.view.webContents.isDestroyed()) {
+          tab.view.webContents.executeJavaScript('document.exitFullscreen().catch(function() {})');
+        }
+      }
+      this.updateActiveViewBounds();
+    });
+
     this.mainWindow.on('app-command', (event, cmd) => {
       if (cmd === 'browser-backward' && this.activeTabId) {
         event.preventDefault();
@@ -263,6 +282,18 @@ export class ViewManager {
     }
 
     const [width, height] = this.mainWindow.getContentSize();
+
+    // If currently in HTML fullscreen, expand to fill 100% of window (0, 0, width, height)
+    if (this.isHtmlFullScreen) {
+      tab.view.setBounds({
+        x: 0,
+        y: 0,
+        width,
+        height,
+      });
+      return;
+    }
+
     const effectiveWidth = Math.max(200, width - this.sidebarWidth);
     tab.view.setBounds({
       x: 0,
@@ -326,7 +357,7 @@ export class ViewManager {
     if (switchImmediately) {
       this.switchTab(id);
     } else {
-      this.notifyTabsUpdated();
+      this.notifyTabsUpdatedImmediate();
     }
 
     return id;
@@ -370,9 +401,23 @@ export class ViewManager {
       this.notifyTabsUpdated();
     });
 
+    wc.on('enter-html-full-screen', () => {
+      this.handleEnterHtmlFullScreen(tab);
+    });
+
+    wc.on('leave-html-full-screen', () => {
+      this.handleLeaveHtmlFullScreen(tab);
+    });
+
     wc.on('before-input-event', (event, input) => {
       if (input.type === 'keyDown') {
-        if (input.key === 'F12' || (input.control && input.shift && (input.key === 'I' || input.key === 'i'))) {
+        if (input.key === 'F11') {
+          event.preventDefault();
+          this.toggleFullScreen();
+        } else if (input.key === 'Escape' && this.isHtmlFullScreen) {
+          event.preventDefault();
+          wc.executeJavaScript('document.exitFullscreen().catch(function() {})');
+        } else if (input.key === 'F12' || (input.control && input.shift && (input.key === 'I' || input.key === 'i'))) {
           event.preventDefault();
           this.toggleDevTools(tab.id);
         } else if (input.control && (input.key === '=' || input.key === '+')) {
@@ -398,10 +443,8 @@ export class ViewManager {
       }
       this.notifyTabsUpdated();
 
-      // Trigger DOM media scan automatically on page load finish
-      if (tab.url && !isNewTabUrl(tab.url)) {
-        this.mediaSniffer.extractFromDOM(wc);
-      }
+      // PERF: DOM media extraction is now on-demand only (when user opens Media Drawer)
+      // This avoids heavy DOM scanning on every page load
 
       // Apply dark mode if enabled
       if (this.forceDarkMode) {
@@ -565,6 +608,16 @@ export class ViewManager {
   public switchTab(tabId: string) {
     if (!this.tabs.has(tabId)) return;
 
+    if (this.isHtmlFullScreen) {
+      this.isHtmlFullScreen = false;
+      if (!this.wasWindowFullScreenBeforeHtml && this.mainWindow.isFullScreen()) {
+        this.mainWindow.setFullScreen(false);
+      }
+      if (!this.mainWindow.isDestroyed()) {
+        this.mainWindow.webContents.send('html-fullscreen:change', false);
+      }
+    }
+
     // Remove previous view
     if (this.activeTabId && this.tabs.has(this.activeTabId)) {
       const prevTab = this.tabs.get(this.activeTabId)!;
@@ -594,12 +647,22 @@ export class ViewManager {
       console.error('Failed to attach active view:', e);
     }
 
-    this.notifyTabsUpdated();
+    this.notifyTabsUpdatedImmediate();
   }
 
   public closeTab(tabId: string) {
     const tab = this.tabs.get(tabId);
     if (!tab) return;
+
+    if (this.isHtmlFullScreen && this.activeTabId === tabId) {
+      this.isHtmlFullScreen = false;
+      if (!this.wasWindowFullScreenBeforeHtml && this.mainWindow.isFullScreen()) {
+        this.mainWindow.setFullScreen(false);
+      }
+      if (!this.mainWindow.isDestroyed()) {
+        this.mainWindow.webContents.send('html-fullscreen:change', false);
+      }
+    }
 
     // Save to recently closed if not incognito and not newtab
     if (!tab.isIncognito && tab.url && !isNewTabUrl(tab.url)) {
@@ -635,7 +698,7 @@ export class ViewManager {
         this.createTab(NEW_TAB_URL);
       }
     } else {
-      this.notifyTabsUpdated();
+      this.notifyTabsUpdatedImmediate();
     }
   }
 
@@ -792,6 +855,107 @@ export class ViewManager {
     return tab.isMuted;
   }
 
+  public async toggleMediaPlayback(tabId: string): Promise<boolean> {
+    const tab = this.tabs.get(tabId);
+    if (!tab || !tab.view || tab.isSleeping) return false;
+    const wc = tab.view.webContents;
+    if (wc.isDestroyed()) return false;
+
+    const script = `
+      (function() {
+        try {
+          // 1. YouTube HTML5 Video Player API
+          const ytPlayer = document.getElementById('movie_player') || window.movie_player;
+          if (ytPlayer && typeof ytPlayer.getPlayerState === 'function') {
+            const state = ytPlayer.getPlayerState();
+            // 1 = playing, 2 = paused, 3 = buffering, -1 = unstarted
+            if (state === 1) {
+              ytPlayer.pauseVideo();
+              return { success: true, action: 'paused' };
+            } else {
+              ytPlayer.playVideo();
+              return { success: true, action: 'played' };
+            }
+          }
+
+          // 2. Generic HTML5 <video> and <audio> elements
+          const mediaElements = Array.from(document.querySelectorAll('video, audio'));
+          if (mediaElements.length > 0) {
+            const playing = mediaElements.find(function(m) { return !m.paused && !m.ended && m.currentTime > 0; });
+            if (playing) {
+              playing.pause();
+              return { success: true, action: 'paused' };
+            } else {
+              const toPlay = mediaElements.find(function(m) { return m.currentTime > 0; }) || mediaElements[0];
+              if (toPlay) {
+                toPlay.play().catch(function() {});
+                return { success: true, action: 'played' };
+              }
+            }
+          }
+
+          // 3. Spotify Web Player
+          const spotifyPlayBtn = document.querySelector('[data-testid=\"control-button-playpause\"]');
+          if (spotifyPlayBtn) {
+            spotifyPlayBtn.click();
+            return { success: true, action: 'toggled' };
+          }
+
+          // 4. SoundCloud
+          const scPlayBtn = document.querySelector('.playControl');
+          if (scPlayBtn) {
+            scPlayBtn.click();
+            return { success: true, action: 'toggled' };
+          }
+
+          // 5. Twitch
+          const twitchPlayBtn = document.querySelector('[data-a-target=\"player-play-pause-button\"]');
+          if (twitchPlayBtn) {
+            twitchPlayBtn.click();
+            return { success: true, action: 'toggled' };
+          }
+        } catch (e) {}
+        return { success: false };
+      })();
+    `;
+
+    try {
+      await wc.executeJavaScript(script);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  public muteAllAudio(): void {
+    for (const tab of this.tabs.values()) {
+      tab.isMuted = true;
+      if (tab.view && !tab.isSleeping) {
+        this.applyVolumeToWebContents(tab.view.webContents, tab.volume, true);
+      }
+    }
+    this.notifyTabsUpdatedImmediate();
+  }
+
+  public unmuteAllAudio(): void {
+    for (const tab of this.tabs.values()) {
+      tab.isMuted = false;
+      if (tab.view && !tab.isSleeping) {
+        this.applyVolumeToWebContents(tab.view.webContents, tab.volume, false);
+      }
+    }
+    this.notifyTabsUpdatedImmediate();
+  }
+
+  public async pauseAllMedia(): Promise<void> {
+    for (const tab of this.tabs.values()) {
+      if (tab.isPlayingAudio && tab.view && !tab.isSleeping) {
+        await this.toggleMediaPlayback(tab.id);
+      }
+    }
+    this.notifyTabsUpdatedImmediate();
+  }
+
   public setTabZoom(tabId: string, zoomFactor: number): number {
     const tab = this.tabs.get(tabId);
     if (!tab) return 1.0;
@@ -868,6 +1032,26 @@ export class ViewManager {
   }
 
   public notifyTabsUpdated() {
+    // PERF: Debounce notifications to max ~7 per second (150ms window)
+    // Multiple rapid events (did-start-loading, did-navigate, page-title-updated, etc.)
+    // will be batched into a single IPC send
+    if (this.notifyDebounceTimer) return;
+    this.notifyDebounceTimer = setTimeout(() => {
+      this.notifyDebounceTimer = null;
+      this._sendTabsUpdate();
+    }, 150);
+  }
+
+  // Force-send immediately (used for critical updates like tab close/create)
+  public notifyTabsUpdatedImmediate() {
+    if (this.notifyDebounceTimer) {
+      clearTimeout(this.notifyDebounceTimer);
+      this.notifyDebounceTimer = null;
+    }
+    this._sendTabsUpdate();
+  }
+
+  private _sendTabsUpdate() {
     if (this.mainWindow.isDestroyed()) return;
 
     const tabList: TabInfo[] = Array.from(this.tabs.values()).map((t) => ({
@@ -889,5 +1073,54 @@ export class ViewManager {
     }));
 
     this.mainWindow.webContents.send('tabs:updated', tabList, this.activeTabId || '');
+  }
+
+  private handleEnterHtmlFullScreen(tab: ManagedTab) {
+    this.isHtmlFullScreen = true;
+    this.wasWindowFullScreenBeforeHtml = this.mainWindow.isFullScreen();
+
+    // 1. Enter OS-level full screen if not already
+    if (!this.wasWindowFullScreenBeforeHtml) {
+      this.mainWindow.setFullScreen(true);
+    }
+
+    // 2. Expand view bounds to cover 100% of window (0, 0, width, height)
+    const [width, height] = this.mainWindow.getContentSize();
+    if (tab.view && !tab.isSleeping) {
+      tab.view.setBounds({
+        x: 0,
+        y: 0,
+        width,
+        height,
+      });
+    }
+
+    // 3. Notify renderer
+    if (!this.mainWindow.isDestroyed()) {
+      this.mainWindow.webContents.send('html-fullscreen:change', true);
+    }
+  }
+
+  private handleLeaveHtmlFullScreen(tab: ManagedTab) {
+    this.isHtmlFullScreen = false;
+
+    // 1. Exit OS-level full screen if it was entered for this video
+    if (!this.wasWindowFullScreenBeforeHtml && this.mainWindow.isFullScreen()) {
+      this.mainWindow.setFullScreen(false);
+    }
+
+    // 2. Restore normal tab view bounds
+    this.updateActiveViewBounds();
+
+    // 3. Notify renderer
+    if (!this.mainWindow.isDestroyed()) {
+      this.mainWindow.webContents.send('html-fullscreen:change', false);
+    }
+  }
+
+  public toggleFullScreen(): boolean {
+    const isFs = !this.mainWindow.isFullScreen();
+    this.mainWindow.setFullScreen(isFs);
+    return isFs;
   }
 }

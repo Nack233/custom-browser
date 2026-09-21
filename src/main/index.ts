@@ -77,10 +77,12 @@ async function createWindow() {
   mediaSniffer.setActiveTabProvider(() => viewManager?.getActiveTabId() || null);
 
   // Wire up listeners to notify React UI
+  // PERF: Only send the lightweight adblock:blocked event, not a full tab list rebuild.
+  // The renderer's onAdBlocked handler doesn't need the full tab list.
+  // Tab adblock stats are already included in the next debounced notifyTabsUpdated().
   adblocker.setOnBlockedCallback((tabId, url, total) => {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('adblock:blocked', tabId, url, total);
-      viewManager?.notifyTabsUpdated();
     }
   });
 
@@ -294,6 +296,22 @@ function setupIpc() {
 
   ipcMain.handle('tab:toggle-mute', (_event, tabId: string) => {
     return viewManager?.toggleTabMute(tabId) ?? false;
+  });
+
+  ipcMain.handle('tab:toggle-media-playback', async (_event, tabId: string) => {
+    return (await viewManager?.toggleMediaPlayback(tabId)) ?? false;
+  });
+
+  ipcMain.handle('media:mute-all', () => {
+    viewManager?.muteAllAudio();
+  });
+
+  ipcMain.handle('media:unmute-all', () => {
+    viewManager?.unmuteAllAudio();
+  });
+
+  ipcMain.handle('media:pause-all', async () => {
+    await viewManager?.pauseAllMedia();
   });
 
   // Page Zoom Controls

@@ -29,10 +29,34 @@ export class MediaSnifferService {
     this.onMediaFoundCallback = cb;
   }
 
+  // Fast media-type extension check (no regex, no URL parsing)
+  private static readonly MEDIA_EXTENSIONS = new Set([
+    '.mp4', '.webm', '.ogv', '.mov', '.mkv',
+    '.m3u8', '.mpd',
+    '.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.avif'
+  ]);
+
+  private isMediaUrl(url: string): boolean {
+    // Quick check: find last dot before query string
+    const qIdx = url.indexOf('?');
+    const pathEnd = qIdx > 0 ? qIdx : url.length;
+    const dotIdx = url.lastIndexOf('.', pathEnd);
+    if (dotIdx < 0) return false;
+    const ext = url.substring(dotIdx, pathEnd).toLowerCase();
+    return MediaSnifferService.MEDIA_EXTENSIONS.has(ext);
+  }
+
   private initNetworkSniffer() {
     // Intercept headers received for all requests
     session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
       try {
+        const url = details.url;
+
+        // PERF: Skip data URLs and non-HTTP(s) immediately
+        if (url.startsWith('data:') || url.startsWith('chrome') || url.startsWith('devtools')) {
+          return callback({ cancel: false });
+        }
+
         const headers = details.responseHeaders || {};
         const getHeader = (name: string): string | undefined => {
           const key = Object.keys(headers).find((k) => k.toLowerCase() === name.toLowerCase());
@@ -40,37 +64,50 @@ export class MediaSnifferService {
         };
 
         const contentType = getHeader('content-type') || '';
+
+        // PERF: Early-return for non-media content types (HTML, CSS, JS, JSON, fonts, etc.)
+        // Only proceed if content-type hints at media OR the URL extension matches known media
+        const isMediaContentType =
+          contentType.startsWith('video/') ||
+          contentType.startsWith('image/') ||
+          contentType.includes('mpegurl') ||
+          contentType.includes('application/dash+xml');
+
+        if (!isMediaContentType && !this.isMediaUrl(url)) {
+          return callback({ cancel: false });
+        }
+
         const contentLength = getHeader('content-length');
         const size = contentLength ? parseInt(contentLength, 10) : undefined;
-        const url = details.url;
 
         let type: 'image' | 'video' | 'stream' | null = null;
 
-        if (contentType.startsWith('video/') || url.match(/\.(mp4|webm|ogv|mov|mkv)(\?.*)?$/i)) {
+        if (contentType.startsWith('video/') || /\.(mp4|webm|ogv|mov|mkv)(\?.*)?$/i.test(url)) {
           type = 'video';
         } else if (
           contentType.includes('mpegurl') ||
           contentType.includes('application/dash+xml') ||
-          url.match(/\.(m3u8|mpd)(\?.*)?$/i)
+          /\.(m3u8|mpd)(\?.*)?$/i.test(url)
         ) {
           type = 'stream';
-        } else if (contentType.startsWith('image/') || url.match(/\.(jpg|jpeg|png|webp|gif|svg|avif)(\?.*)?$/i)) {
-          // Ignore data URLs or tiny tracking gifs (< 500 bytes)
+        } else if (contentType.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif|svg|avif)(\?.*)?$/i.test(url)) {
+          // Ignore tiny tracking gifs (< 1000 bytes)
           if (!size || size > 1000) {
             type = 'image';
           }
         }
 
-        if (type && !url.startsWith('data:')) {
-          const item: MediaItem = {
-            id: crypto.createHash('md5').update(url).digest('hex'),
-            url,
-            type,
-            mimeType: contentType,
-            size,
-          };
+        if (type) {
+          // PERF: Use simple FNV-1a hash instead of crypto MD5
+          let hash = 2166136261;
+          for (let i = 0; i < url.length; i++) {
+            hash ^= url.charCodeAt(i);
+            hash = (hash * 16777619) >>> 0;
+          }
+          const id = hash.toString(36);
 
-          // Find tab from details.webContentsId if possible, else active tab
+          const item: MediaItem = { id, url, type, mimeType: contentType, size };
+
           const tabId = details.webContentsId
             ? `tab_${details.webContentsId}`
             : (this.activeTabProvider?.() || 'global');
@@ -173,7 +210,13 @@ export class MediaSnifferService {
       const results: MediaItem[] = await webContents.executeJavaScript(script);
       const tabId = `tab_${webContents.id}`;
       results.forEach((item) => {
-        item.id = crypto.createHash('md5').update(item.url).digest('hex');
+        // PERF: Use FNV-1a hash instead of MD5
+        let hash = 2166136261;
+        for (let i = 0; i < item.url.length; i++) {
+          hash ^= item.url.charCodeAt(i);
+          hash = (hash * 16777619) >>> 0;
+        }
+        item.id = hash.toString(36);
         this.addMediaItem(tabId, item);
       });
       return results;

@@ -53,6 +53,10 @@ const api: BrowserApi = {
   // Per-Tab Audio & Volume Control
   setTabVolume: (tabId: string, volume: number) => ipcRenderer.invoke('tab:set-volume', tabId, volume),
   toggleTabMute: (tabId: string) => ipcRenderer.invoke('tab:toggle-mute', tabId),
+  toggleMediaPlayback: (tabId: string) => ipcRenderer.invoke('tab:toggle-media-playback', tabId),
+  muteAllAudio: () => ipcRenderer.invoke('media:mute-all'),
+  unmuteAllAudio: () => ipcRenderer.invoke('media:unmute-all'),
+  pauseAllMedia: () => ipcRenderer.invoke('media:pause-all'),
 
   // Page Zoom Controls
   setTabZoom: (tabId: string, zoomFactor: number) => ipcRenderer.invoke('tab:set-zoom', tabId, zoomFactor),
@@ -113,6 +117,14 @@ const api: BrowserApi = {
     ipcRenderer.on('download:complete', handler);
     return () => {
       ipcRenderer.removeListener('download:complete', handler);
+    };
+  },
+
+  onHtmlFullScreenChange: (callback: (isFullScreen: boolean) => void) => {
+    const handler = (_event: any, isFs: boolean) => callback(isFs);
+    ipcRenderer.on('html-fullscreen:change', handler);
+    return () => {
+      ipcRenderer.removeListener('html-fullscreen:change', handler);
     };
   },
 };
