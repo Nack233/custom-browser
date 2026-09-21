@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import type { TabInfo } from '../../types/browser';
 import { Shield, ShieldAlert, CheckCircle2, X } from 'lucide-react';
 
@@ -10,6 +10,7 @@ interface AdShieldModalProps {
   onToggleBlockGifAds: () => void;
   onToggleBlockRedirects: () => void;
   topOffset?: number;
+  isFloatingModal?: boolean;
 }
 
 export const AdShieldModal: React.FC<AdShieldModalProps> = ({
@@ -20,8 +21,19 @@ export const AdShieldModal: React.FC<AdShieldModalProps> = ({
   onToggleBlockGifAds,
   onToggleBlockRedirects,
   topOffset = 92,
+  isFloatingModal = false,
 }) => {
   if (!isOpen) return null;
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const enabled = activeTab?.adBlockStats?.enabled ?? true;
   const blockGifAds = activeTab?.adBlockStats?.blockGifAds ?? true;
@@ -29,24 +41,33 @@ export const AdShieldModal: React.FC<AdShieldModalProps> = ({
   const blockedCount = activeTab?.adBlockStats?.blockedCount ?? 0;
   const recentBlocked = activeTab?.adBlockStats?.recentBlocked ?? [];
 
+  const containerClass = isFloatingModal
+    ? 'w-full h-full max-h-[510px] flex flex-col bg-[#18181f]/95 backdrop-blur-2xl border border-pink-500/30 rounded-2xl shadow-2xl overflow-hidden select-none animate-in fade-in zoom-in-95 duration-150'
+    : 'fixed right-3 z-50 w-[350px] max-h-[75vh] flex flex-col bg-[#18181f]/95 backdrop-blur-2xl border border-pink-500/30 rounded-2xl shadow-2xl overflow-hidden select-none animate-in fade-in slide-in-from-top-2 duration-150';
+
   return (
     <div
-      className="fixed right-0 bottom-0 w-[340px] bg-[#16161a] border-l border-[#25252b] z-50 flex flex-col shadow-2xl animate-in slide-in-from-right duration-200 select-none"
-      style={{ top: `${topOffset}px` }}
+      className={containerClass}
+      style={isFloatingModal ? undefined : { top: `${topOffset + 4}px` }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#25252b]">
-        <div className="flex items-center space-x-2">
-          {enabled ? (
-            <Shield className="w-4 h-4 text-indigo-400" />
-          ) : (
-            <ShieldAlert className="w-4 h-4 text-amber-400" />
-          )}
-          <h2 className="text-sm font-semibold text-gray-100">Shield Protection</h2>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#2a2a38] bg-[#14141a]/70">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-7 h-7 rounded-lg bg-pink-500/20 border border-pink-500/30 flex items-center justify-center text-pink-400 shadow-xs">
+            {enabled ? (
+              <Shield className="w-4 h-4 text-pink-400" />
+            ) : (
+              <ShieldAlert className="w-4 h-4 text-amber-400" />
+            )}
+          </div>
+          <div>
+            <h2 className="text-xs font-bold text-gray-100">AdShield Protection</h2>
+            <p className="text-[10px] text-gray-400">ระบบบล็อกโฆษณาและแทร็กเกอร์</p>
+          </div>
         </div>
         <button
           onClick={onClose}
-          className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-[#25252e] transition-colors"
+          className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
         >
           <X className="w-4 h-4" />
         </button>

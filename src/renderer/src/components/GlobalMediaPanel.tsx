@@ -26,6 +26,7 @@ interface GlobalMediaPanelProps {
   onCloseTab?: (tabId: string) => void;
   language: Language;
   topOffset?: number;
+  isFloatingModal?: boolean;
 }
 
 export const GlobalMediaPanel: React.FC<GlobalMediaPanelProps> = ({
@@ -36,10 +37,21 @@ export const GlobalMediaPanel: React.FC<GlobalMediaPanelProps> = ({
   onSwitchTab,
   language,
   topOffset = 92,
+  isFloatingModal = false,
 }) => {
   const [localVolumes, setLocalVolumes] = useState<Record<string, number>>({});
   const isTh = language === 'th';
   const t = translations[language];
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   // Sync tab volumes to local state for responsive slider dragging
   useEffect(() => {
@@ -120,10 +132,14 @@ export const GlobalMediaPanel: React.FC<GlobalMediaPanelProps> = ({
     return `${filledStr}${emptyStr}`;
   };
 
+  const containerClass = isFloatingModal
+    ? 'w-full h-full max-h-[550px] flex flex-col bg-[#14141d]/95 backdrop-blur-2xl border border-pink-500/30 rounded-2xl shadow-2xl overflow-hidden select-none animate-in fade-in zoom-in-95 duration-150 text-gray-200'
+    : 'fixed right-3 z-50 w-[420px] max-h-[75vh] flex flex-col bg-[#14141d]/95 backdrop-blur-2xl border border-pink-500/30 rounded-2xl shadow-2xl overflow-hidden select-none animate-in fade-in slide-in-from-top-2 duration-150 text-gray-200';
+
   return (
     <div
-      className="fixed right-0 bottom-0 w-[440px] bg-[#14141d] border-l border-pink-500/30 z-50 flex flex-col shadow-2xl select-none animate-in slide-in-from-right duration-200 text-gray-200"
-      style={{ top: `${topOffset}px` }}
+      className={containerClass}
+      style={isFloatingModal ? undefined : { top: `${topOffset + 4}px` }}
     >
       {/* Glow ambient background accents */}
       <div className="absolute top-0 right-1/4 w-48 h-48 bg-pink-500/10 rounded-full blur-3xl pointer-events-none" />

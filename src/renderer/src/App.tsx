@@ -14,18 +14,57 @@ import { UpdateLogModal } from './components/UpdateLogModal';
 import { GlobalMediaPanel } from './components/GlobalMediaPanel';
 import type { Language } from './i18n';
 
-const StandaloneDownloadsModal: React.FC = () => {
+const StandaloneFlyoutModal: React.FC = () => {
+  const [flyoutType, setFlyoutType] = useState<'downloads' | 'shield' | 'media-extractor' | 'media-control'>('downloads');
+  const [tabs, setTabs] = useState<TabInfo[]>([]);
+  const [activeTabId, setActiveTabId] = useState<string>('');
   const [downloads, setDownloads] = useState<DownloadItemInfo[]>([]);
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [language, setLanguage] = useState<Language>('th');
+  const [isScanning, setIsScanning] = useState(false);
 
   useEffect(() => {
     document.documentElement.style.backgroundColor = 'transparent';
     document.body.style.backgroundColor = 'transparent';
     document.body.className = 'bg-transparent overflow-hidden select-none m-0 p-0';
 
+    const url = window.location.href;
+    if (url.includes('modal=shield')) setFlyoutType('shield');
+    else if (url.includes('modal=media-extractor')) setFlyoutType('media-extractor');
+    else if (url.includes('modal=media-control')) setFlyoutType('media-control');
+    else setFlyoutType('downloads');
+
+    window.browserApi.getCurrentTabs?.().then((info) => {
+      if (info) {
+        setTabs(info.tabs || []);
+        setActiveTabId(info.activeTabId || '');
+        if (info.activeTabId) {
+          window.browserApi.getMediaForTab?.(info.activeTabId).then((m) => setMediaItems(m || []));
+        }
+      }
+    });
+
     window.browserApi.getDownloads?.().then((dls) => setDownloads(dls || []));
     window.browserApi.getSettings?.().then((s) => {
       if (s?.language) setLanguage(s.language);
+    });
+
+    const unbindMode = window.browserApi.onFlyoutModeChanged?.((mode) => {
+      setFlyoutType(mode);
+      if (mode === 'media-extractor' && activeTabId) {
+        window.browserApi.getMediaForTab?.(activeTabId).then((m) => setMediaItems(m || []));
+      }
+    });
+
+    const unbindTabs = window.browserApi.onTabsUpdated?.((updatedTabs, currentActiveId) => {
+      setTabs(updatedTabs);
+      setActiveTabId(currentActiveId);
+    });
+
+    const unbindMedia = window.browserApi.onMediaFound?.((tabId, item) => {
+      if (tabId === activeTabId) {
+        setMediaItems((prev) => (prev.some((m) => m.url === item.url) ? prev : [...prev, item]));
+      }
     });
 
     const unsubsProgress = window.browserApi.onDownloadProgress?.((item) => {
@@ -53,37 +92,124 @@ const StandaloneDownloadsModal: React.FC = () => {
     });
 
     return () => {
+      unbindMode?.();
+      unbindTabs?.();
+      unbindMedia?.();
       unsubsProgress?.();
       unsubsComplete?.();
     };
-  }, []);
+  }, [activeTabId]);
+
+  const activeTab = tabs.find((t) => t.id === activeTabId);
+
+  const handleClose = () => {
+    window.browserApi.closeFlyout?.();
+  };
+
+  const handleRefreshScan = async () => {
+    if (!activeTabId) return;
+    setIsScanning(true);
+    try {
+      const items = await window.browserApi.extractDomMedia?.(activeTabId);
+      if (items && items.length > 0) {
+        setMediaItems((prev) => {
+          const combined = [...prev];
+          items.forEach((item) => {
+            if (!combined.some((m) => m.url === item.url)) combined.push(item);
+          });
+          return combined;
+        });
+      }
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const handlePickSection = async () => {
+    if (!activeTabId) return;
+    setIsScanning(true);
+    try {
+      const items = await window.browserApi.pickSectionMedia?.(activeTabId);
+      if (items && items.length > 0) {
+        setMediaItems((prev) => {
+          const combined = [...prev];
+          items.forEach((item) => {
+            if (!combined.some((m) => m.url === item.url)) combined.unshift(item);
+          });
+          return combined;
+        });
+      }
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
   return (
     <div className="w-full h-full p-2 bg-transparent select-none overflow-hidden">
-      <DownloadsFlyout
-        isOpen={true}
-        isFloatingModal={true}
-        onClose={() => window.browserApi.closeDownloadsFlyout?.()}
-        downloads={downloads}
-        onCancelDownload={(id) => window.browserApi.cancelDownload?.(id)}
-        onClearHistory={() => {
-          window.browserApi.clearDownloadsHistory?.();
-          setDownloads((prev) => prev.filter((d) => d.state === 'progressing'));
-        }}
-        language={language}
-        topOffset={0}
-      />
+      {flyoutType === 'downloads' && (
+        <DownloadsFlyout
+          isOpen={true}
+          isFloatingModal={true}
+          onClose={handleClose}
+          downloads={downloads}
+          onCancelDownload={(id) => window.browserApi.cancelDownload?.(id)}
+          onClearHistory={() => {
+            window.browserApi.clearDownloadsHistory?.();
+            setDownloads((prev) => prev.filter((d) => d.state === 'progressing'));
+          }}
+          language={language}
+          topOffset={0}
+        />
+      )}
+      {flyoutType === 'shield' && (
+        <AdShieldModal
+          isOpen={true}
+          isFloatingModal={true}
+          onClose={handleClose}
+          activeTab={activeTab}
+          onToggleAdBlock={() => activeTabId && window.browserApi.toggleAdBlocker?.(activeTabId)}
+          onToggleBlockGifAds={() => window.browserApi.toggleBlockGifAds?.()}
+          onToggleBlockRedirects={() => window.browserApi.toggleBlockRedirects?.()}
+          topOffset={0}
+        />
+      )}
+      {flyoutType === 'media-extractor' && (
+        <MediaDrawer
+          isOpen={true}
+          isFloatingModal={true}
+          onClose={handleClose}
+          mediaItems={mediaItems}
+          onRefreshScan={handleRefreshScan}
+          onPickSection={handlePickSection}
+          onOpenInTab={(url) => (activeTabId ? window.browserApi.navigate?.(activeTabId, url) : window.browserApi.createTab?.(url))}
+          isScanning={isScanning}
+          topOffset={0}
+        />
+      )}
+      {flyoutType === 'media-control' && (
+        <GlobalMediaPanel
+          isOpen={true}
+          isFloatingModal={true}
+          onClose={handleClose}
+          tabs={tabs}
+          activeTabId={activeTabId}
+          onSwitchTab={(id) => window.browserApi.switchTab?.(id)}
+          onCloseTab={(id) => window.browserApi.closeTab?.(id)}
+          language={language}
+          topOffset={0}
+        />
+      )}
     </div>
   );
 };
 
 export const App: React.FC = () => {
-  const isDownloadModalMode =
+  const isFlyoutModalMode =
     typeof window !== 'undefined' &&
-    (window.location.search.includes('modal=downloads') || window.location.hash.includes('modal=downloads'));
+    (window.location.search.includes('modal=') || window.location.hash.includes('modal='));
 
-  if (isDownloadModalMode) {
-    return <StandaloneDownloadsModal />;
+  if (isFlyoutModalMode) {
+    return <StandaloneFlyoutModal />;
   }
 
   const [tabs, setTabs] = useState<TabInfo[]>([]);
@@ -115,11 +241,11 @@ export const App: React.FC = () => {
     setIsSettingsOpen(false);
     setIsUpdateLogOpen(false);
     setIsDownloadsOpen(false);
-    window.browserApi.closeDownloadsFlyout?.();
     setIsShieldOpen(false);
     setIsMediaDrawerOpen(false);
-    setIsMoreOptionsOpen(false);
     setIsMediaControlOpen(false);
+    setIsMoreOptionsOpen(false);
+    window.browserApi.closeFlyout?.();
     await window.browserApi.openSettingsTab();
   };
 
@@ -207,9 +333,12 @@ export const App: React.FC = () => {
       });
     });
 
-    // 5. Listen for Downloads flyout state (open/close)
-    const unbindDlFlyout = window.browserApi.onDownloadsFlyoutStateChanged?.((isOpen) => {
-      setIsDownloadsOpen(isOpen);
+    // 5. Listen for Universal Flyout state (open/close)
+    const unbindFlyout = window.browserApi.onFlyoutStateChanged?.((type, isOpen) => {
+      setIsDownloadsOpen(isOpen && type === 'downloads');
+      setIsShieldOpen(isOpen && type === 'shield');
+      setIsMediaDrawerOpen(isOpen && type === 'media-extractor');
+      setIsMediaControlOpen(isOpen && type === 'media-control');
     });
 
     // 6. Listen for HTML5 Fullscreen (YouTube/Video Fullscreen)
@@ -218,11 +347,11 @@ export const App: React.FC = () => {
       if (isFs) {
         setIsMediaControlOpen(false);
         setIsDownloadsOpen(false);
-        window.browserApi.closeDownloadsFlyout?.();
         setIsShieldOpen(false);
         setIsMediaDrawerOpen(false);
         setIsMoreOptionsOpen(false);
         setIsUpdateLogOpen(false);
+        window.browserApi.closeFlyout?.();
       }
     });
 
@@ -232,7 +361,7 @@ export const App: React.FC = () => {
       unbindAdBlock();
       unbindDlProgress?.();
       unbindDlComplete?.();
-      unbindDlFlyout?.();
+      unbindFlyout?.();
       unbindFs?.();
     };
   }, [refreshRecentlyClosed]);
@@ -274,13 +403,10 @@ export const App: React.FC = () => {
       }
       // Escape: Close any open drawer or panel
       else if (e.key === 'Escape') {
-        setIsMediaControlOpen(false);
-        setIsDownloadsOpen(false);
-        window.browserApi.closeDownloadsFlyout?.();
-        setIsShieldOpen(false);
-        setIsMediaDrawerOpen(false);
+        window.browserApi.closeFlyout?.();
         setIsMoreOptionsOpen(false);
         setIsUpdateLogOpen(false);
+        setIsSettingsOpen(false);
       }
     };
 
@@ -288,17 +414,11 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [refreshRecentlyClosed, activeTabId]);
 
-  // Webpage remains 100% full width (sidebarWidth = 0) unless a drawer is explicitly open
-  // Downloads flyout now floats natively as a child window without compressing or squeezing the webpage!
+  // Webpage remains 100% full width (sidebarWidth = 0) permanently!
+  // Downloads, Shields, Media Extractor, and Media Control all float natively as child windows without squeezing the webpage!
   useEffect(() => {
-    let width = 0;
-    if (isMediaDrawerOpen) width = 420;
-    else if (isShieldOpen) width = 340;
-    else if (isMoreOptionsOpen) width = 300;
-    else if (isUpdateLogOpen) width = 440;
-    else if (isMediaControlOpen) width = 440;
-    window.browserApi.setSidebarWidth(width);
-  }, [isMediaDrawerOpen, isShieldOpen, isMoreOptionsOpen, isUpdateLogOpen, isMediaControlOpen]);
+    window.browserApi.setSidebarWidth(0);
+  }, []);
 
   // Sync TopBar Height when Bookmarks bar is toggled or visible
   useEffect(() => {
@@ -493,36 +613,30 @@ export const App: React.FC = () => {
           onForward={handleForward}
           onReload={handleReload}
           onToggleShield={() => {
-            setIsShieldOpen(!isShieldOpen);
-            setIsMediaDrawerOpen(false);
+            const topOffset = showBookmarksBar && bookmarks.length > 0 ? 124 : 92;
+            window.browserApi.toggleFlyout?.('shield', topOffset);
+            setIsMoreOptionsOpen(false);
             setIsSettingsOpen(false);
-            window.browserApi.closeDownloadsFlyout?.();
             setIsUpdateLogOpen(false);
           }}
           onToggleMediaDrawer={() => {
-            const next = !isMediaDrawerOpen;
-            setIsMediaDrawerOpen(next);
-            setIsShieldOpen(false);
+            const topOffset = showBookmarksBar && bookmarks.length > 0 ? 124 : 92;
+            window.browserApi.toggleFlyout?.('media-extractor', topOffset);
+            setIsMoreOptionsOpen(false);
             setIsSettingsOpen(false);
-            window.browserApi.closeDownloadsFlyout?.();
             setIsUpdateLogOpen(false);
-            if (next) {
-              handleRefreshScan();
-            }
           }}
           onToggleSettings={() => {
             setIsSettingsOpen(!isSettingsOpen);
-            setIsShieldOpen(false);
-            setIsMediaDrawerOpen(false);
-            window.browserApi.closeDownloadsFlyout?.();
+            window.browserApi.closeFlyout?.();
+            setIsMoreOptionsOpen(false);
             setIsUpdateLogOpen(false);
           }}
           isDownloadsOpen={isDownloadsOpen}
           onToggleDownloads={() => {
             const topOffset = showBookmarksBar && bookmarks.length > 0 ? 124 : 92;
-            window.browserApi.toggleDownloadsFlyout?.(topOffset);
-            setIsShieldOpen(false);
-            setIsMediaDrawerOpen(false);
+            window.browserApi.toggleFlyout?.('downloads', topOffset);
+            setIsMoreOptionsOpen(false);
             setIsSettingsOpen(false);
             setIsUpdateLogOpen(false);
           }}
@@ -554,16 +668,11 @@ export const App: React.FC = () => {
           onToggleMoreOptions={() => setIsMoreOptionsOpen(!isMoreOptionsOpen)}
           isMediaControlOpen={isMediaControlOpen}
           onToggleMediaControl={() => {
-            const next = !isMediaControlOpen;
-            setIsMediaControlOpen(next);
-            if (next) {
-              setIsShieldOpen(false);
-              setIsMediaDrawerOpen(false);
-              setIsSettingsOpen(false);
-              window.browserApi.closeDownloadsFlyout?.();
-              setIsUpdateLogOpen(false);
-              setIsMoreOptionsOpen(false);
-            }
+            const topOffset = showBookmarksBar && bookmarks.length > 0 ? 124 : 92;
+            window.browserApi.toggleFlyout?.('media-control', topOffset);
+            setIsMoreOptionsOpen(false);
+            setIsSettingsOpen(false);
+            setIsUpdateLogOpen(false);
           }}
           hasActiveAudio={tabs.some((t) => t.isPlayingAudio)}
         />
@@ -616,27 +725,6 @@ export const App: React.FC = () => {
       </div>
 
       {/* Popovers / Drawers */}
-      <AdShieldModal
-        isOpen={isShieldOpen}
-        onClose={() => setIsShieldOpen(false)}
-        activeTab={activeTab}
-        onToggleAdBlock={handleToggleAdBlock}
-        onToggleBlockGifAds={handleToggleBlockGifAds}
-        onToggleBlockRedirects={handleToggleBlockRedirects}
-        topOffset={showBookmarksBar && bookmarks.length > 0 ? 124 : 92}
-      />
-
-      <MediaDrawer
-        isOpen={isMediaDrawerOpen}
-        onClose={() => setIsMediaDrawerOpen(false)}
-        mediaItems={currentTabMedia}
-        onRefreshScan={handleRefreshScan}
-        onPickSection={handlePickSection}
-        onOpenInTab={handleNavigate}
-        isScanning={isScanning}
-        topOffset={showBookmarksBar && bookmarks.length > 0 ? 124 : 92}
-      />
-
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
@@ -678,21 +766,20 @@ export const App: React.FC = () => {
         onToggleBookmarksBar={handleToggleBookmarksBar}
         onOpenDownloads={() => {
           const topOffset = showBookmarksBar && bookmarks.length > 0 ? 124 : 92;
-          window.browserApi.toggleDownloadsFlyout?.(topOffset);
-          setIsShieldOpen(false);
-          setIsMediaDrawerOpen(false);
+          window.browserApi.toggleFlyout?.('downloads', topOffset);
+          setIsMoreOptionsOpen(false);
           setIsUpdateLogOpen(false);
         }}
         onOpenShield={() => {
-          setIsShieldOpen(true);
-          window.browserApi.closeDownloadsFlyout?.();
-          setIsMediaDrawerOpen(false);
+          const topOffset = showBookmarksBar && bookmarks.length > 0 ? 124 : 92;
+          window.browserApi.toggleFlyout?.('shield', topOffset);
+          setIsMoreOptionsOpen(false);
           setIsUpdateLogOpen(false);
         }}
         onOpenMedia={() => {
-          setIsMediaDrawerOpen(true);
-          setIsShieldOpen(false);
-          window.browserApi.closeDownloadsFlyout?.();
+          const topOffset = showBookmarksBar && bookmarks.length > 0 ? 124 : 92;
+          window.browserApi.toggleFlyout?.('media-extractor', topOffset);
+          setIsMoreOptionsOpen(false);
           setIsUpdateLogOpen(false);
         }}
         forceDarkMode={forceDarkMode}
@@ -704,24 +791,11 @@ export const App: React.FC = () => {
         onRestoreClosedTab={handleRestoreClosedTab}
         canRestoreClosed={recentlyClosed.length > 0}
         onOpenMediaControl={() => {
-          setIsMediaControlOpen(true);
-          setIsShieldOpen(false);
-          setIsMediaDrawerOpen(false);
-          window.browserApi.closeDownloadsFlyout?.();
+          const topOffset = showBookmarksBar && bookmarks.length > 0 ? 124 : 92;
+          window.browserApi.toggleFlyout?.('media-control', topOffset);
+          setIsMoreOptionsOpen(false);
           setIsUpdateLogOpen(false);
         }}
-      />
-
-      {/* Global Media Panel & Volume Mixer (Windows-style) */}
-      <GlobalMediaPanel
-        isOpen={isMediaControlOpen}
-        onClose={() => setIsMediaControlOpen(false)}
-        tabs={tabs}
-        activeTabId={activeTabId}
-        onSwitchTab={handleSelectTab}
-        onCloseTab={handleCloseTab}
-        language={language}
-        topOffset={showBookmarksBar && bookmarks.length > 0 ? 124 : 92}
       />
     </div>
   );

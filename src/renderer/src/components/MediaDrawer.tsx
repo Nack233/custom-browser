@@ -30,6 +30,7 @@ interface MediaDrawerProps {
   onOpenInTab: (url: string) => void;
   isScanning: boolean;
   topOffset?: number;
+  isFloatingModal?: boolean;
 }
 
 export const MediaDrawer: React.FC<MediaDrawerProps> = ({
@@ -41,6 +42,7 @@ export const MediaDrawer: React.FC<MediaDrawerProps> = ({
   onOpenInTab,
   isScanning,
   topOffset = 92,
+  isFloatingModal = false,
 }) => {
   const [filter, setFilter] = useState<'all' | 'video' | 'image'>('all');
   const [hideGifs, setHideGifs] = useState(false);
@@ -55,6 +57,16 @@ export const MediaDrawer: React.FC<MediaDrawerProps> = ({
   const [zipProgress, setZipProgress] = useState<{ current: number; total: number; percent: number; status: string } | null>(null);
   const [zipResultPath, setZipResultPath] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   useEffect(() => {
     const unbind = window.browserApi.onZipProgress?.((data) => {
@@ -214,26 +226,37 @@ export const MediaDrawer: React.FC<MediaDrawerProps> = ({
 
   const allSelected = filteredItems.length > 0 && selectedIds.size === filteredItems.length;
 
+  const containerClass = isFloatingModal
+    ? 'w-full h-full max-h-[590px] flex flex-col bg-[#18181f]/95 backdrop-blur-2xl border border-pink-500/30 rounded-2xl shadow-2xl overflow-hidden select-none animate-in fade-in zoom-in-95 duration-150'
+    : 'fixed right-3 z-50 w-[420px] max-h-[75vh] flex flex-col bg-[#18181f]/95 backdrop-blur-2xl border border-pink-500/30 rounded-2xl shadow-2xl overflow-hidden select-none animate-in fade-in slide-in-from-top-2 duration-150';
+
   return (
     <div
-      className="fixed right-0 bottom-0 w-[420px] bg-[#16161a] border-l border-[#25252b] z-50 flex flex-col shadow-2xl animate-in slide-in-from-right duration-200 select-none"
-      style={{ top: `${topOffset}px` }}
+      className={containerClass}
+      style={isFloatingModal ? undefined : { top: `${topOffset + 4}px` }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#25252b] bg-[#131317]">
-        <div className="flex items-center space-x-2">
-          <Film className="w-4 h-4 text-emerald-400" />
-          <h2 className="text-sm font-semibold text-gray-100">Media Extractor</h2>
-          <span className="text-xs bg-[#24242e] text-gray-300 px-2 py-0.5 rounded-full font-mono">
-            {mediaItems.length}
-          </span>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#2a2a38] bg-[#14141a]/70">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-xs">
+            <Film className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center space-x-2">
+              <h2 className="text-xs font-bold text-gray-100">Media Extractor</h2>
+              <span className="text-[10px] bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 px-1.5 py-0.2 rounded-full font-mono font-bold">
+                {mediaItems.length}
+              </span>
+            </div>
+            <p className="text-[10px] text-gray-400">ดึงรูปภาพ วิดีโอ และสตรีมมีเดีย</p>
+          </div>
         </div>
 
         <div className="flex items-center space-x-1">
           {/* View Mode Toggle: Grid vs List */}
           <button
             onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-            className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-[#25252e] transition-colors"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
             title={viewMode === 'grid' ? 'Switch to List view' : 'Switch to Grid view'}
           >
             {viewMode === 'grid' ? <List className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
@@ -241,14 +264,14 @@ export const MediaDrawer: React.FC<MediaDrawerProps> = ({
           <button
             onClick={onRefreshScan}
             disabled={isScanning}
-            className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-[#25252e] transition-colors"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
             title="Scan whole page DOM"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin text-emerald-400' : ''}`} />
           </button>
           <button
             onClick={onClose}
-            className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-[#25252e] transition-colors"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>

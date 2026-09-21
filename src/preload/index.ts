@@ -49,8 +49,15 @@ const api: BrowserApi = {
   clearDownloadsHistory: () => ipcRenderer.invoke('downloads:clear'),
   openDownloadFile: (filePath: string) => ipcRenderer.invoke('downloads:open-file', filePath),
   openDownloadsFolder: () => ipcRenderer.invoke('downloads:open-folder'),
-  toggleDownloadsFlyout: (topOffset?: number) => ipcRenderer.invoke('downloads:toggle-flyout', topOffset),
-  closeDownloadsFlyout: () => ipcRenderer.invoke('downloads:close-flyout'),
+  toggleDownloadsFlyout: (topOffset?: number) => ipcRenderer.invoke('flyout:toggle', 'downloads', topOffset),
+  closeDownloadsFlyout: () => ipcRenderer.invoke('flyout:close'),
+
+  // Universal Floating Flyouts
+  toggleFlyout: (type: 'downloads' | 'shield' | 'media-extractor' | 'media-control', topOffset?: number) =>
+    ipcRenderer.invoke('flyout:toggle', type, topOffset),
+  closeFlyout: () => ipcRenderer.invoke('flyout:close'),
+  getCurrentTabs: () => ipcRenderer.invoke('tabs:get-current'),
+  getMediaForTab: (tabId: string) => ipcRenderer.invoke('media:get-for-tab', tabId),
 
   // Per-Tab Audio & Volume Control
   setTabVolume: (tabId: string, volume: number) => ipcRenderer.invoke('tab:set-volume', tabId, volume),
@@ -127,6 +134,22 @@ const api: BrowserApi = {
     ipcRenderer.on('downloads:flyout-state-changed', handler);
     return () => {
       ipcRenderer.removeListener('downloads:flyout-state-changed', handler);
+    };
+  },
+
+  onFlyoutStateChanged: (callback: (type: string | null, isOpen: boolean) => void) => {
+    const handler = (_event: any, type: string | null, isOpen: boolean) => callback(type, isOpen);
+    ipcRenderer.on('flyout:state-changed', handler);
+    return () => {
+      ipcRenderer.removeListener('flyout:state-changed', handler);
+    };
+  },
+
+  onFlyoutModeChanged: (callback: (type: 'downloads' | 'shield' | 'media-extractor' | 'media-control') => void) => {
+    const handler = (_event: any, type: 'downloads' | 'shield' | 'media-extractor' | 'media-control') => callback(type);
+    ipcRenderer.on('flyout:set-mode', handler);
+    return () => {
+      ipcRenderer.removeListener('flyout:set-mode', handler);
     };
   },
 

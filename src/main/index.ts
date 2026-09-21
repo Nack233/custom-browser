@@ -17,20 +17,30 @@ let settingsManager: SettingsManager | null = null;
 let downloadManager: DownloadManager | null = null;
 let localeManager: LocaleManager | null = null;
 let windowStateManager: WindowStateManager | null = null;
-let downloadsWindow: BrowserWindow | null = null;
+type FlyoutType = 'downloads' | 'shield' | 'media-extractor' | 'media-control';
+
+let flyoutWindow: BrowserWindow | null = null;
+let currentFlyoutType: FlyoutType | null = null;
 let cachedTopOffset = 92;
 let lastBlurTime = 0;
 
+const FLYOUT_CONFIG: Record<FlyoutType, { width: number; height: number }> = {
+  downloads: { width: 390, height: 520 },
+  shield: { width: 360, height: 520 },
+  'media-extractor': { width: 440, height: 600 },
+  'media-control': { width: 420, height: 560 },
+};
+
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
-function getOrCreateDownloadsWindow(): BrowserWindow {
-  if (downloadsWindow && !downloadsWindow.isDestroyed()) {
-    return downloadsWindow;
+function getOrCreateFlyoutWindow(): BrowserWindow {
+  if (flyoutWindow && !flyoutWindow.isDestroyed()) {
+    return flyoutWindow;
   }
 
-  downloadsWindow = new BrowserWindow({
-    width: 390,
-    height: 520,
+  flyoutWindow = new BrowserWindow({
+    width: 440,
+    height: 620,
     parent: mainWindow || undefined,
     frame: false,
     transparent: true,
@@ -46,37 +56,40 @@ function getOrCreateDownloadsWindow(): BrowserWindow {
     },
   });
 
-  downloadsWindow.on('blur', () => {
+  flyoutWindow.on('blur', () => {
     lastBlurTime = Date.now();
-    if (downloadsWindow && !downloadsWindow.isDestroyed() && downloadsWindow.isVisible()) {
-      downloadsWindow.hide();
+    if (flyoutWindow && !flyoutWindow.isDestroyed() && flyoutWindow.isVisible()) {
+      flyoutWindow.hide();
+      currentFlyoutType = null;
       if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('flyout:state-changed', null, false);
         mainWindow.webContents.send('downloads:flyout-state-changed', false);
       }
     }
   });
 
   if (isDev) {
-    downloadsWindow.loadURL('http://localhost:5173/?modal=downloads');
+    flyoutWindow.loadURL('http://localhost:5173/?modal=flyout');
   } else {
-    downloadsWindow.loadFile(path.join(__dirname, '../dist-renderer/index.html'), {
-      search: 'modal=downloads',
-      hash: 'modal=downloads',
+    flyoutWindow.loadFile(path.join(__dirname, '../dist-renderer/index.html'), {
+      search: 'modal=flyout',
+      hash: 'modal=flyout',
     });
   }
 
-  return downloadsWindow;
+  return flyoutWindow;
 }
 
-function repositionDownloadsFlyout(topOffset: number = cachedTopOffset) {
-  if (!downloadsWindow || downloadsWindow.isDestroyed() || !mainWindow || mainWindow.isDestroyed()) return;
+function repositionFlyout(type: FlyoutType = currentFlyoutType || 'downloads', topOffset: number = cachedTopOffset) {
+  if (!flyoutWindow || flyoutWindow.isDestroyed() || !mainWindow || mainWindow.isDestroyed()) return;
   cachedTopOffset = topOffset;
   const mainBounds = mainWindow.getBounds();
-  const width = 390;
-  const height = 520;
+  const config = FLYOUT_CONFIG[type] || { width: 390, height: 520 };
+  const width = config.width;
+  const height = config.height;
   const x = mainBounds.x + mainBounds.width - width - 14;
   const y = mainBounds.y + topOffset + 6;
-  downloadsWindow.setBounds({ x, y, width, height });
+  flyoutWindow.setBounds({ x, y, width, height });
 }
 
 // Ignore certificate errors so local dev, corporate proxies, or antivirus SSL inspection don't cause blank white pages
@@ -136,19 +149,20 @@ async function createWindow() {
   mediaSniffer.setActiveTabProvider(() => viewManager?.getActiveTabId() || null);
 
   // Wire up listeners to notify React UI
-  // PERF: Only send the lightweight adblock:blocked event, not a full tab list rebuild.
-  // The renderer's onAdBlocked handler doesn't need the full tab list.
-  // Tab adblock stats are already included in the next debounced notifyTabsUpdated().
   adblocker.setOnBlockedCallback((tabId, url, total) => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('adblock:blocked', tabId, url, total);
-    }
+    BrowserWindow.getAllWindows().forEach((win) => {
+      if (!win.isDestroyed()) {
+        win.webContents.send('adblock:blocked', tabId, url, total);
+      }
+    });
   });
 
   mediaSniffer.setOnMediaFoundCallback((tabId, item) => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('media:found', tabId, item);
-    }
+    BrowserWindow.getAllWindows().forEach((win) => {
+      if (!win.isDestroyed()) {
+        win.webContents.send('media:found', tabId, item);
+      }
+    });
   });
 
   // Load React Frontend
@@ -167,28 +181,30 @@ async function createWindow() {
   viewManager.createTab('bocchy://newtab');
 
   mainWindow.on('move', () => {
-    if (downloadsWindow && !downloadsWindow.isDestroyed() && downloadsWindow.isVisible()) {
-      repositionDownloadsFlyout(cachedTopOffset);
+    if (flyoutWindow && !flyoutWindow.isDestroyed() && flyoutWindow.isVisible()) {
+      repositionFlyout(currentFlyoutType || 'downloads', cachedTopOffset);
     }
   });
 
   mainWindow.on('resize', () => {
-    if (downloadsWindow && !downloadsWindow.isDestroyed() && downloadsWindow.isVisible()) {
-      repositionDownloadsFlyout(cachedTopOffset);
+    if (flyoutWindow && !flyoutWindow.isDestroyed() && flyoutWindow.isVisible()) {
+      repositionFlyout(currentFlyoutType || 'downloads', cachedTopOffset);
     }
   });
 
   mainWindow.on('minimize', () => {
-    if (downloadsWindow && !downloadsWindow.isDestroyed() && downloadsWindow.isVisible()) {
-      downloadsWindow.hide();
+    if (flyoutWindow && !flyoutWindow.isDestroyed() && flyoutWindow.isVisible()) {
+      flyoutWindow.hide();
+      currentFlyoutType = null;
+      mainWindow?.webContents.send('flyout:state-changed', null, false);
       mainWindow?.webContents.send('downloads:flyout-state-changed', false);
     }
   });
 
   mainWindow.on('closed', () => {
-    if (downloadsWindow && !downloadsWindow.isDestroyed()) {
-      downloadsWindow.destroy();
-      downloadsWindow = null;
+    if (flyoutWindow && !flyoutWindow.isDestroyed()) {
+      flyoutWindow.destroy();
+      flyoutWindow = null;
     }
     mainWindow = null;
   });
@@ -372,30 +388,56 @@ function setupIpc() {
     await downloadManager?.openDownloadsFolder();
   });
 
-  ipcMain.handle('downloads:toggle-flyout', (_event, topOffset?: number) => {
-    const win = getOrCreateDownloadsWindow();
+  // Universal Flyout Handlers
+  ipcMain.handle('flyout:toggle', (_event, type: FlyoutType, topOffset?: number) => {
+    const win = getOrCreateFlyoutWindow();
     if (topOffset) cachedTopOffset = topOffset;
     const now = Date.now();
-    if (win.isVisible()) {
+
+    if (win.isVisible() && currentFlyoutType === type) {
       win.hide();
+      currentFlyoutType = null;
+      mainWindow?.webContents.send('flyout:state-changed', null, false);
       mainWindow?.webContents.send('downloads:flyout-state-changed', false);
       return false;
-    } else if (now - lastBlurTime < 250) {
+    } else if (now - lastBlurTime < 250 && currentFlyoutType === type) {
+      currentFlyoutType = null;
       return false;
     } else {
-      repositionDownloadsFlyout(cachedTopOffset);
+      currentFlyoutType = type;
+      repositionFlyout(type, cachedTopOffset);
+      win.webContents.send('flyout:set-mode', type);
       win.show();
       win.focus();
-      mainWindow?.webContents.send('downloads:flyout-state-changed', true);
+      mainWindow?.webContents.send('flyout:state-changed', type, true);
+      mainWindow?.webContents.send('downloads:flyout-state-changed', type === 'downloads');
       return true;
     }
   });
 
-  ipcMain.handle('downloads:close-flyout', () => {
-    if (downloadsWindow && !downloadsWindow.isDestroyed()) {
-      downloadsWindow.hide();
+  ipcMain.handle('flyout:close', () => {
+    if (flyoutWindow && !flyoutWindow.isDestroyed() && flyoutWindow.isVisible()) {
+      flyoutWindow.hide();
+      currentFlyoutType = null;
+      mainWindow?.webContents.send('flyout:state-changed', null, false);
       mainWindow?.webContents.send('downloads:flyout-state-changed', false);
     }
+  });
+
+  ipcMain.handle('downloads:toggle-flyout', (_event, topOffset?: number) => {
+    return ipcMain.emit('flyout:toggle', _event, 'downloads', topOffset);
+  });
+
+  ipcMain.handle('downloads:close-flyout', (_event) => {
+    return ipcMain.emit('flyout:close', _event);
+  });
+
+  ipcMain.handle('tabs:get-current', () => {
+    return viewManager?.getActiveTabsInfo() || { tabs: [], activeTabId: '' };
+  });
+
+  ipcMain.handle('media:get-for-tab', (_event, tabId: string) => {
+    return mediaSniffer?.getMediaForTab(tabId) || [];
   });
 
   // Per-Tab Audio & Volume Control

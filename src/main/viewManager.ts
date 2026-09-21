@@ -1064,7 +1064,32 @@ export class ViewManager {
       adBlockStats: this.adblocker.getStats(t.id),
     }));
 
-    this.mainWindow.webContents.send('tabs:updated', tabList, this.activeTabId || '');
+    BrowserWindow.getAllWindows().forEach((win) => {
+      if (!win.isDestroyed()) {
+        win.webContents.send('tabs:updated', tabList, this.activeTabId || '');
+      }
+    });
+  }
+
+  public getActiveTabsInfo(): { tabs: TabInfo[]; activeTabId: string } {
+    const tabList: TabInfo[] = Array.from(this.tabs.values()).map((t) => ({
+      id: t.id,
+      title: t.title,
+      url: t.url,
+      favicon: t.favicon,
+      isLoading: t.isLoading,
+      canGoBack: t.canGoBack,
+      canGoForward: t.canGoForward,
+      isIncognito: t.isIncognito,
+      isSleeping: t.isSleeping,
+      lastActiveAt: t.lastActiveAt,
+      isPlayingAudio: t.isPlayingAudio,
+      isMuted: t.isMuted,
+      volume: t.volume,
+      zoomFactor: t.zoomFactor,
+      adBlockStats: this.adblocker.getStats(t.id),
+    }));
+    return { tabs: tabList, activeTabId: this.activeTabId || '' };
   }
 
   private handleEnterHtmlFullScreen(tab: ManagedTab) {
