@@ -43,7 +43,7 @@ export const TabBar: React.FC<TabBarProps> = ({
 
   return (
     <div
-      className="flex items-center h-10 px-2 bg-[#121214] select-none border-b border-[#222226]"
+      className="flex items-center h-10 px-2.5 bg-gradient-to-r from-[#170e1e]/95 via-[#140a18]/90 to-[#120816]/95 backdrop-blur-2xl select-none border-b border-pink-500/15"
       style={{ WebkitAppRegion: 'drag' } as any}
       onMouseDown={(e) => {
         if (e.button === 1 && e.target === e.currentTarget) {
@@ -59,7 +59,7 @@ export const TabBar: React.FC<TabBarProps> = ({
       }}
     >
       <div
-        className="flex items-center space-x-1 flex-1 overflow-x-auto no-scrollbar pr-36"
+        className="flex items-center space-x-1.5 flex-1 overflow-x-auto no-scrollbar pr-36"
         onMouseDown={(e) => {
           if (e.button === 1 && e.target === e.currentTarget) {
             e.preventDefault();
@@ -95,16 +95,16 @@ export const TabBar: React.FC<TabBarProps> = ({
                 }
               }}
               style={{ WebkitAppRegion: 'no-drag' } as any}
-              className={`group relative flex items-center h-8 px-3 max-w-[220px] min-w-[130px] rounded-lg text-xs cursor-pointer transition-all duration-150 ${
+              className={`group relative flex items-center h-8 px-3 max-w-[220px] min-w-[130px] rounded-xl text-xs cursor-pointer transition-all duration-200 ${
                 isSleeping ? 'opacity-60 hover:opacity-100' : ''
               } ${
                 isIncognito
                   ? isActive
-                    ? 'bg-[#261e38] text-purple-200 border border-purple-500/40 shadow-sm font-medium'
-                    : 'text-purple-300/70 hover:bg-[#1f182d] hover:text-purple-200 border border-purple-500/20'
+                    ? 'bg-gradient-to-r from-purple-900/40 to-pink-900/30 text-purple-200 border border-purple-400/40 shadow-[0_0_15px_rgba(168,85,247,0.25)] font-medium'
+                    : 'text-purple-300/70 hover:bg-purple-950/30 hover:text-purple-100 border border-purple-500/20'
                   : isActive
-                  ? 'bg-[#222228] text-white font-medium shadow-sm'
-                  : 'text-gray-400 hover:bg-[#1a1a20] hover:text-gray-200'
+                  ? 'bg-gradient-to-r from-pink-500/25 via-rose-500/20 to-pink-500/25 text-pink-50 border border-pink-400/45 shadow-[0_0_16px_rgba(244,114,182,0.25)] font-semibold'
+                  : 'text-pink-200/60 hover:bg-pink-500/10 hover:text-pink-100 border border-transparent hover:border-pink-500/25'
               }`}
               title={
                 isSleeping
@@ -112,12 +112,17 @@ export const TabBar: React.FC<TabBarProps> = ({
                   : `${tab.title}\n(คลิกเมาส์กลางที่แท็บเพื่อปิด)`
               }
             >
+              {/* Cute Active Sparkle Indicator */}
+              {isActive && !isIncognito && (
+                <span className="w-1.5 h-1.5 rounded-full bg-pink-400 shadow-[0_0_8px_#f472b6] mr-1.5 flex-shrink-0 animate-pulse" />
+              )}
+
               {/* Favicon / Incognito / Loading / Sleep */}
               <div className="mr-2 flex-shrink-0 flex items-center justify-center w-4 h-4">
                 {tab.isLoading ? (
                   <Loader2
                     className={`w-3.5 h-3.5 animate-spin ${
-                      isIncognito ? 'text-purple-400' : 'text-indigo-400'
+                      isIncognito ? 'text-purple-400' : 'text-pink-400'
                     }`}
                   />
                 ) : isSleeping ? (
@@ -128,18 +133,18 @@ export const TabBar: React.FC<TabBarProps> = ({
                   <img
                     src={tab.favicon}
                     alt=""
-                    className="w-3.5 h-3.5 rounded-sm object-contain"
+                    className="w-3.5 h-3.5 rounded-md object-contain"
                     onError={(e) => {
                       (e.target as HTMLElement).style.display = 'none';
                     }}
                   />
                 ) : (
-                  <Globe className="w-3.5 h-3.5 opacity-60" />
+                  <Globe className="w-3.5 h-3.5 text-pink-400/60" />
                 )}
               </div>
 
               {/* Title */}
-              <span className={`truncate flex-1 ${isSleeping ? 'italic text-gray-400' : ''}`}>
+              <span className={`truncate flex-1 font-medium ${isSleeping ? 'italic text-pink-300/40' : ''}`}>
                 {tab.title || (tab.isLoading ? 'Loading...' : isIncognito ? 'Incognito' : 'New Tab')}
               </span>
 
@@ -153,10 +158,10 @@ export const TabBar: React.FC<TabBarProps> = ({
                     const delta = e.deltaY < 0 ? 5 : -5;
                     handleVolumeChange(tab.id, Math.max(0, Math.min(100, volume + delta)));
                   }}
-                  className={`ml-1 px-1.5 py-0.5 rounded-md transition-all flex items-center justify-center space-x-1 flex-shrink-0 ${
+                  className={`ml-1 px-1.5 py-0.5 rounded-lg transition-all flex items-center justify-center space-x-1 flex-shrink-0 ${
                     isMuted
-                      ? 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 ring-1 ring-rose-500/40'
-                      : 'bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/30'
+                      ? 'bg-rose-500/25 text-rose-300 hover:bg-rose-500/35 border border-rose-500/40 shadow-sm'
+                      : 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/35'
                   }`}
                   title={
                     isMuted
@@ -181,23 +186,23 @@ export const TabBar: React.FC<TabBarProps> = ({
                   e.stopPropagation();
                   onCloseTab(tab.id);
                 }}
-                className={`ml-1 p-0.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-[#32323c] transition-opacity ${
-                  isActive ? 'opacity-70' : ''
+                className={`ml-1.5 p-0.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-pink-500/30 hover:text-white text-pink-300/60 transition-all ${
+                  isActive ? 'opacity-80' : ''
                 }`}
                 title="Close Tab (หรือคลิกเมาส์กลางที่แท็บ)"
               >
-                <X className="w-3 h-3 text-gray-400 hover:text-white" />
+                <X className="w-3 h-3" />
               </button>
             </div>
           );
         })}
 
         {/* Action Controls: New Tab, Incognito Tab, Restore Closed Tab */}
-        <div className="flex items-center space-x-0.5 ml-1" style={{ WebkitAppRegion: 'no-drag' } as any}>
+        <div className="flex items-center space-x-1 ml-1" style={{ WebkitAppRegion: 'no-drag' } as any}>
           {/* New Normal Tab */}
           <button
             onClick={onNewTab}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-[#1f1f26] transition-colors"
+            className="p-1.5 rounded-xl text-pink-300 hover:text-pink-50 hover:bg-pink-500/20 hover:border-pink-400/30 border border-transparent transition-all shadow-sm"
             title="Open New Tab (Ctrl+T)"
           >
             <Plus className="w-4 h-4" />
@@ -206,7 +211,7 @@ export const TabBar: React.FC<TabBarProps> = ({
           {/* New Incognito Tab */}
           <button
             onClick={onNewIncognitoTab}
-            className="p-1.5 rounded-lg text-purple-400/80 hover:text-purple-200 hover:bg-[#281b3d] transition-colors"
+            className="p-1.5 rounded-xl text-purple-300/80 hover:text-purple-100 hover:bg-purple-500/20 hover:border-purple-400/30 border border-transparent transition-all shadow-sm"
             title="New Incognito Tab (Ctrl+Shift+N)"
           >
             <EyeOff className="w-3.5 h-3.5" />
@@ -216,7 +221,7 @@ export const TabBar: React.FC<TabBarProps> = ({
           <button
             onClick={onRestoreClosedTab}
             disabled={!canRestoreClosed}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-emerald-300 hover:bg-[#1f2622] disabled:opacity-20 disabled:hover:bg-transparent transition-colors"
+            className="p-1.5 rounded-xl text-emerald-300/80 hover:text-emerald-100 hover:bg-emerald-500/20 hover:border-emerald-400/30 border border-transparent disabled:opacity-20 disabled:hover:bg-transparent transition-all"
             title={canRestoreClosed ? 'Reopen Closed Tab (Ctrl+Shift+T)' : 'No recently closed tabs'}
           >
             <RotateCcw className="w-3.5 h-3.5" />

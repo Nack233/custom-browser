@@ -120,13 +120,13 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
   const zoomPercent = Math.round(currentZoomFactor * 100);
 
   return (
-    <div className="flex items-center h-10 px-3 bg-[#18181c] border-b border-[#25252b] space-x-2 select-none z-30 relative">
+    <div className="flex items-center h-10 px-3 bg-gradient-to-r from-[#170e1e]/95 via-[#140a18]/90 to-[#120816]/95 backdrop-blur-2xl border-b border-pink-500/15 space-x-2 select-none z-30 relative">
       {/* Navigation Controls */}
       <div className="flex items-center space-x-1">
         <button
           onClick={onBack}
           disabled={!activeTab?.canGoBack}
-          className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-[#25252d] disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+          className="p-1.5 rounded-xl text-pink-200/70 hover:text-white hover:bg-pink-500/20 disabled:opacity-20 disabled:hover:bg-transparent transition-all"
           title={t.back || 'Back'}
         >
           <ArrowLeft className="w-4 h-4" />
@@ -134,33 +134,33 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         <button
           onClick={onForward}
           disabled={!activeTab?.canGoForward}
-          className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-[#25252d] disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+          className="p-1.5 rounded-xl text-pink-200/70 hover:text-white hover:bg-pink-500/20 disabled:opacity-20 disabled:hover:bg-transparent transition-all"
           title={t.forward || 'Forward'}
         >
           <ArrowRight className="w-4 h-4" />
         </button>
         <button
           onClick={onReload}
-          className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-[#25252d] transition-colors"
+          className="p-1.5 rounded-xl text-pink-200/70 hover:text-white hover:bg-pink-500/20 transition-all"
           title={t.reload || 'Reload'}
         >
-          <RotateCw className={`w-3.5 h-3.5 ${activeTab?.isLoading ? 'animate-spin text-indigo-400' : ''}`} />
+          <RotateCw className={`w-3.5 h-3.5 ${activeTab?.isLoading ? 'animate-spin text-pink-400' : ''}`} />
         </button>
       </div>
 
       {/* Omnibox / Address Bar */}
       <form onSubmit={handleSubmit} className="flex-1">
         <div
-          className={`flex items-center h-7 px-3 bg-[#111114] rounded-md border transition-all ${
+          className={`flex items-center h-7.5 px-3.5 rounded-full border transition-all ${
             isFocused
-              ? 'border-indigo-500 ring-1 ring-indigo-500/20'
-              : 'border-[#2a2a32] hover:border-[#383844]'
+              ? 'bg-[#1f1127]/90 border-pink-400 ring-2 ring-pink-500/30 shadow-[0_0_20px_rgba(244,114,182,0.3)]'
+              : 'bg-[#180e20]/75 hover:bg-[#1c1126]/90 border-pink-500/25 hover:border-pink-400/50 shadow-sm'
           }`}
         >
           {isHttps ? (
-            <Lock className="w-3 h-3 text-emerald-400 mr-2 flex-shrink-0" />
+            <Lock className="w-3.5 h-3.5 text-pink-400 mr-2 flex-shrink-0" />
           ) : (
-            <Search className="w-3 h-3 text-gray-500 mr-2 flex-shrink-0" />
+            <Search className="w-3.5 h-3.5 text-pink-300/40 mr-2 flex-shrink-0" />
           )}
 
           <input
@@ -173,7 +173,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
             }}
             onBlur={() => setIsFocused(false)}
             placeholder={t.searchPlaceholder}
-            className="w-full bg-transparent text-xs text-gray-100 placeholder-gray-500 focus:outline-none"
+            className="w-full bg-transparent text-xs text-pink-50 placeholder-pink-300/40 focus:outline-none"
           />
 
           {/* Bookmark Star Button */}
@@ -181,8 +181,8 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
             <button
               type="button"
               onClick={onToggleBookmark}
-              className={`p-1 rounded hover:bg-[#252530] transition-colors ml-1 ${
-                isBookmarked ? 'text-amber-400' : 'text-gray-500 hover:text-amber-300'
+              className={`p-1 rounded-full hover:bg-pink-500/25 transition-colors ml-1 ${
+                isBookmarked ? 'text-amber-400' : 'text-pink-300/40 hover:text-amber-300'
               }`}
               title={isBookmarked ? t.removeBookmark : t.bookmarkThisPage}
             >
@@ -195,20 +195,20 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
       {/* Action Buttons */}
       <div className="flex items-center space-x-1.5">
         {/* Page Zoom Inline Stepper (Never clips behind WebContentsView) */}
-        <div className="flex items-center bg-[#131317] border border-[#2b2b36] rounded-lg p-0.5 space-x-0.5 select-none">
+        <div className="flex items-center bg-[#1a0f24]/80 border border-pink-500/25 rounded-xl p-0.5 space-x-0.5 select-none shadow-sm">
           <button
             onClick={onZoomOut}
-            className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-white hover:bg-[#252532] transition-colors"
+            className="w-5 h-5 flex items-center justify-center rounded-lg text-pink-300/70 hover:text-white hover:bg-pink-500/20 transition-all"
             title={t.zoomOut || 'Zoom Out (Ctrl + -)'}
           >
             <ZoomOut className="w-3 h-3" />
           </button>
           <button
             onClick={onResetZoom}
-            className={`px-1.5 h-5 flex items-center justify-center rounded font-mono text-[10px] font-bold transition-colors ${
+            className={`px-1.5 h-5 flex items-center justify-center rounded-lg font-mono text-[10px] font-bold transition-all ${
               zoomPercent !== 100
-                ? 'bg-blue-600/30 text-blue-300 border border-blue-500/40'
-                : 'text-gray-300 hover:text-white hover:bg-[#22222a]'
+                ? 'bg-pink-500/30 text-pink-200 border border-pink-400/40'
+                : 'text-pink-200/70 hover:text-white hover:bg-pink-500/15'
             }`}
             title={t.resetZoom || 'Reset to 100% (Ctrl + 0)'}
           >
@@ -216,7 +216,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
           </button>
           <button
             onClick={onZoomIn}
-            className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-white hover:bg-[#252532] transition-colors"
+            className="w-5 h-5 flex items-center justify-center rounded-lg text-pink-300/70 hover:text-white hover:bg-pink-500/20 transition-all"
             title={t.zoomIn || 'Zoom In (Ctrl + +)'}
           >
             <ZoomIn className="w-3 h-3" />
@@ -227,7 +227,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         {devModeEnabled && (
           <button
             onClick={onToggleDevTools}
-            className="p-1.5 rounded-md text-xs font-medium bg-[#22222a] text-amber-400 hover:bg-[#2d2d38] hover:text-amber-300 transition-colors border border-amber-500/20"
+            className="p-1.5 rounded-xl text-xs font-medium bg-[#1e1128] text-amber-400 hover:bg-[#281635] hover:text-amber-300 transition-colors border border-amber-500/20 shadow-sm"
             title={t.openDevTools || 'Developer Tools (F12)'}
           >
             <Code2 className="w-3.5 h-3.5" />
@@ -237,20 +237,20 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         {/* Update Log / What's New Button */}
         <button
           onClick={onToggleUpdateLog}
-          className="flex items-center space-x-1 px-2 py-1 rounded-md text-xs font-medium bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-pink-300 hover:from-pink-500/30 hover:to-purple-500/30 border border-pink-500/30 shadow-sm transition-all"
+          className="flex items-center space-x-1 px-2 py-1 rounded-xl text-xs font-medium bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-pink-300 hover:from-pink-500/30 hover:to-purple-500/30 border border-pink-400/35 shadow-[0_0_12px_rgba(244,114,182,0.2)] transition-all"
           title={t.whatsNew || "What's New in v1.1.1"}
         >
-          <Sparkles className="w-3.5 h-3.5 text-pink-400" />
+          <Sparkles className="w-3.5 h-3.5 text-pink-400 animate-pulse" />
           <span className="text-[10px] font-bold font-mono">v1.1.1</span>
         </button>
 
         {/* Force Dark Mode Quick Toggle */}
         <button
           onClick={onToggleForceDarkMode}
-          className={`p-1.5 rounded-md text-xs font-medium transition-colors ${
+          className={`p-1.5 rounded-xl text-xs font-medium transition-colors ${
             forceDarkMode
-              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-              : 'bg-[#22222a] text-gray-400 hover:text-amber-300 hover:bg-[#2c2c36]'
+              ? 'bg-amber-500/25 text-amber-300 border border-amber-500/40 shadow-sm'
+              : 'bg-[#1b1022] text-pink-200/60 hover:text-amber-300 hover:bg-pink-500/20 border border-pink-500/15'
           }`}
           title={`${t.forceDarkMode}: ${forceDarkMode ? 'ON' : 'OFF'}`}
         >
@@ -264,10 +264,10 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         {/* Bookmarks Bar Toggle */}
         <button
           onClick={onToggleBookmarksBar}
-          className={`p-1.5 rounded-md text-xs font-medium transition-colors ${
+          className={`p-1.5 rounded-xl text-xs font-medium transition-colors ${
             showBookmarksBar
-              ? 'bg-[#252532] text-amber-400 border border-amber-500/30'
-              : 'bg-[#22222a] text-gray-400 hover:text-amber-400 hover:bg-[#2c2c36]'
+              ? 'bg-[#1e1128] text-amber-400 border border-amber-500/30 shadow-sm'
+              : 'bg-[#1b1022] text-pink-200/60 hover:text-amber-400 hover:bg-pink-500/20 border border-pink-500/15'
           }`}
           title={showBookmarksBar ? t.hideBookmarksBar : t.showBookmarksBar}
         >
@@ -277,17 +277,17 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         {/* AdBlock Shield Button */}
         <button
           onClick={onToggleShield}
-          className={`relative flex items-center px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+          className={`relative flex items-center px-2 py-1 rounded-xl text-xs font-medium transition-colors ${
             isShieldOpen
-              ? 'bg-indigo-600 text-white'
+              ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-[0_0_12px_rgba(244,114,182,0.4)]'
               : adBlockEnabled
-              ? 'bg-[#22222a] text-indigo-300 hover:bg-[#2c2c36]'
-              : 'bg-[#22222a] text-gray-400 hover:bg-[#2c2c36]'
+              ? 'bg-pink-950/40 text-pink-200 border border-pink-400/30 hover:bg-pink-900/40 shadow-sm'
+              : 'bg-[#1b1022] text-pink-200/60 hover:bg-pink-500/20 border border-pink-500/15'
           }`}
           title={t.shieldTitle}
         >
           {adBlockEnabled ? (
-            <Shield className="w-3.5 h-3.5 mr-1.5 text-indigo-400" />
+            <Shield className="w-3.5 h-3.5 mr-1.5 text-pink-400" />
           ) : (
             <ShieldAlert className="w-3.5 h-3.5 mr-1.5 text-amber-400" />
           )}
@@ -297,19 +297,19 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         {/* Media Sniffer Button */}
         <button
           onClick={onToggleMediaDrawer}
-          className={`relative flex items-center px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+          className={`relative flex items-center px-2.5 py-1 rounded-xl text-xs font-medium transition-colors ${
             isMediaDrawerOpen
-              ? 'bg-emerald-600 text-white'
+              ? 'bg-emerald-600 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]'
               : mediaCount > 0
-              ? 'bg-[#1b2620] text-emerald-300 border border-emerald-500/30 hover:bg-[#23332a]'
-              : 'bg-[#22222a] text-gray-400 hover:bg-[#2c2c36]'
+              ? 'bg-emerald-950/40 text-emerald-200 border border-emerald-400/30 hover:bg-emerald-900/40 shadow-sm'
+              : 'bg-[#1b1022] text-pink-200/60 hover:bg-pink-500/20 border border-pink-500/15'
           }`}
           title={t.media}
         >
           <Film className="w-3.5 h-3.5 mr-1.5 text-emerald-400" />
           <span className="text-[11px]">{t.media}</span>
           {mediaCount > 0 && (
-            <span className="ml-1.5 px-1 py-0.2 text-[10px] bg-emerald-500/20 text-emerald-300 rounded font-mono">
+            <span className="ml-1.5 px-1 py-0.2 text-[10px] bg-emerald-500/25 text-emerald-200 rounded-full font-mono">
               {mediaCount}
             </span>
           )}
@@ -318,18 +318,18 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         {/* Downloads Button */}
         <button
           onClick={onToggleDownloads}
-          className={`relative flex items-center px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+          className={`relative flex items-center px-2 py-1 rounded-xl text-xs font-medium transition-colors ${
             isDownloadsOpen
-              ? 'bg-blue-600 text-white shadow-sm'
+              ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-[0_0_12px_rgba(244,114,182,0.4)]'
               : activeDownloadsCount > 0
-              ? 'bg-[#1a2332] text-blue-300 border border-blue-500/40 shadow-sm'
-              : 'bg-[#22222a] text-gray-400 hover:text-blue-300 hover:bg-[#2c2c36]'
+              ? 'bg-pink-950/50 text-pink-200 border border-pink-400/40 shadow-sm'
+              : 'bg-[#1b1022] text-pink-200/60 hover:text-pink-100 hover:bg-pink-500/20 border border-pink-500/15'
           }`}
           title={t.downloadsFlyoutTitle || 'Downloads'}
         >
-          <Download className={`w-3.5 h-3.5 ${activeDownloadsCount > 0 ? 'animate-bounce text-blue-400' : ''}`} />
+          <Download className={`w-3.5 h-3.5 ${activeDownloadsCount > 0 ? 'animate-bounce text-pink-400' : ''}`} />
           {activeDownloadsCount > 0 && (
-            <span className="ml-1.5 px-1 py-0.2 text-[10px] bg-blue-500/30 text-blue-200 rounded-full font-mono font-bold">
+            <span className="ml-1.5 px-1.5 py-0.2 text-[10px] bg-pink-500/35 text-pink-100 rounded-full font-mono font-bold">
               {activeDownloadsCount}
             </span>
           )}
@@ -338,10 +338,10 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         {/* Settings Button */}
         <button
           onClick={onToggleSettings}
-          className={`p-1.5 rounded-md text-xs font-medium transition-colors ${
+          className={`p-1.5 rounded-xl text-xs font-medium transition-colors ${
             isSettingsOpen
-              ? 'bg-blue-600 text-white'
-              : 'bg-[#22222a] text-gray-400 hover:text-white hover:bg-[#2c2c36]'
+              ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-[0_0_12px_rgba(244,114,182,0.4)]'
+              : 'bg-[#1b1022] text-pink-200/60 hover:text-white hover:bg-pink-500/20 border border-pink-500/15'
           }`}
           title={t.settings}
         >

@@ -15,6 +15,7 @@ import {
   Wrench,
   Globe,
   MousePointer,
+  Heart,
 } from 'lucide-react';
 
 interface UpdateLogModalProps {
@@ -143,6 +144,18 @@ export const UpdateLogModal: React.FC<UpdateLogModalProps> = ({
                 {isTh
                   ? 'รองรับคลิกเมาส์กลางเปิดแท็บใหม่จากลิงก์/YouTube, คลิกเมาส์กลางที่หัวแท็บเพื่อปิดแท็บ, เมนูคลิกขวาเต็มรูปแบบ (Back, Forward, Refresh, Save as, Print, Inspect element) และปุ่มข้างเมาส์ Back/Forward'
                   : 'Added middle-click link to new tab (YouTube/web), middle-click tab to close, rich right-click context menu (Back, Forward, Refresh, Inspect, Print), and mouse side buttons.'}
+              </p>
+            </div>
+
+            <div className="p-3 bg-[#221024] border border-pink-500/30 rounded-xl space-y-1">
+              <div className="flex items-center space-x-1.5 text-pink-300 font-semibold text-[11px]">
+                <Heart className="w-3.5 h-3.5 flex-shrink-0 fill-pink-400 text-pink-400" />
+                <span>{isTh ? 'ดีไซน์ใหม่: Pink Glassmorphism UI (แก้วใสสีชมพูสไตล์ Bocchy)' : 'Cute Pink Glassmorphism UI Redesign'}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 leading-relaxed pl-5">
+                {isTh
+                  ? 'ปรับแต่งหน้า New Tab และแถบนำทางด้านบน (TabBar, NavigationBar, BookmarksBar) ใหม่หมดจด ด้วยโทนสีชมพูพาสเทลเอฟเฟกต์แก้วใส (Glass Transparent), แสงนีออนละมุน และฟอนต์โมเดิร์น Plus Jakarta Sans'
+                  : 'Transformed New Tab page and top bars (TabBar, NavigationBar, BookmarksBar) with pastel pink glass transparent aesthetics, ambient neon glow, and modern Plus Jakarta Sans typography.'}
               </p>
             </div>
           </div>

@@ -109,28 +109,32 @@ export const NewTabPage: React.FC<NewTabPageProps> = ({
   };
 
   return (
-    <div className="flex-1 w-full h-full overflow-y-auto bg-gradient-to-b from-[#121216] via-[#15151a] to-[#0e0e11] text-gray-100 flex flex-col items-center px-6 py-10 select-none">
+    <div className="flex-1 w-full h-full overflow-y-auto bg-gradient-to-b from-[#140a1b] via-[#100615] to-[#0a030d] text-pink-50 flex flex-col items-center px-6 py-10 select-none relative">
       {/* Background ambient glow effect */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-indigo-600/10 rounded-full blur-[130px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-gradient-to-br from-pink-500/20 via-rose-500/15 to-purple-600/15 rounded-full blur-[140px] pointer-events-none animate-pulse-glow" />
+      <div className="absolute bottom-10 right-10 w-[450px] h-[350px] bg-pink-600/10 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute bottom-10 left-10 w-[400px] h-[300px] bg-purple-600/10 rounded-full blur-[130px] pointer-events-none" />
 
       {/* Clock & Header */}
       <div className="text-center z-10 mb-8 flex flex-col items-center">
         <div className="relative mb-4 group">
-          <div className="absolute -inset-1 bg-gradient-to-r from-pink-500/40 via-purple-500/30 to-indigo-500/40 rounded-3xl blur-md group-hover:blur-lg transition-all duration-300 opacity-80" />
-          <img
-            src="./bocchy.png"
-            alt="Bocchy"
-            className="relative w-20 h-20 rounded-2xl shadow-2xl object-cover border border-white/10 ring-1 ring-white/20 transition-transform duration-300 hover:scale-105"
-          />
+          <div className="absolute -inset-1.5 bg-gradient-to-r from-pink-500/60 via-rose-400/40 to-purple-500/50 rounded-3xl blur-lg group-hover:blur-xl transition-all duration-300 opacity-90 animate-pulse" />
+          <div className="relative p-1 rounded-2xl bg-white/10 backdrop-blur-md border border-pink-300/40 shadow-[0_0_30px_rgba(244,114,182,0.4)]">
+            <img
+              src="./bocchy.png"
+              alt="Bocchy"
+              className="w-20 h-20 rounded-xl object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          </div>
         </div>
-        <h1 className="text-5xl font-light tracking-tight text-white/95 font-mono drop-shadow-md">
+        <h1 className="text-6xl font-light tracking-tight bg-gradient-to-r from-pink-100 via-rose-200 to-pink-300 bg-clip-text text-transparent font-mono drop-shadow-[0_0_25px_rgba(244,114,182,0.35)]">
           {currentTime || '00:00'}
         </h1>
-        <p className="text-xs text-gray-400 font-medium mt-1 uppercase tracking-wider">
+        <p className="text-xs text-pink-200/70 font-medium mt-1.5 uppercase tracking-widest">
           {currentDate}
         </p>
-        <p className="text-base font-medium text-indigo-400/90 mt-2">
-          {t.welcomeTitle}
+        <p className="text-sm font-semibold bg-gradient-to-r from-pink-300 via-rose-200 to-purple-300 bg-clip-text text-transparent mt-2 flex items-center space-x-1.5">
+          <span>✨ {t.welcomeTitle} 🌸</span>
         </p>
       </div>
 
@@ -141,7 +145,7 @@ export const NewTabPage: React.FC<NewTabPageProps> = ({
             <button
               type="button"
               onClick={() => setSearchEngine(searchEngine === 'duckduckgo' ? 'google' : 'duckduckgo')}
-              className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#25252e] hover:bg-[#32323e] text-indigo-300 transition-colors flex items-center"
+              className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-pink-500/20 hover:bg-pink-500/30 text-pink-200 border border-pink-400/30 transition-all flex items-center shadow-sm"
               title="Click to switch search engine"
             >
               {searchEngine === 'duckduckgo' ? '🦆 DuckDuckGo' : '🔍 Google'}
@@ -154,16 +158,16 @@ export const NewTabPage: React.FC<NewTabPageProps> = ({
             onChange={(e) => setQuery(e.target.value)}
             placeholder={
               searchEngine === 'duckduckgo'
-                ? 'Search with DuckDuckGo or enter web address...'
-                : 'Search with Google or enter web address...'
+                ? (language === 'th' ? 'ค้นหาด้วย DuckDuckGo หรือพิมพ์ที่อยู่เว็บ...' : 'Search with DuckDuckGo or enter web address...')
+                : (language === 'th' ? 'ค้นหาด้วย Google หรือพิมพ์ที่อยู่เว็บ...' : 'Search with Google or enter web address...')
             }
-            className="w-full h-12 pl-36 pr-12 bg-[#1b1b22]/90 backdrop-blur-md rounded-2xl border border-white/10 hover:border-indigo-500/50 focus:border-indigo-500 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-lg transition-all"
+            className="w-full h-12 pl-36 pr-14 bg-white/[0.04] hover:bg-white/[0.07] backdrop-blur-2xl rounded-2xl border border-pink-400/30 hover:border-pink-400/60 focus:border-pink-400 text-sm text-pink-50 placeholder-pink-300/40 focus:outline-none focus:ring-4 focus:ring-pink-500/20 shadow-[0_10px_35px_rgba(244,114,182,0.18),inset_0_1px_1px_rgba(255,255,255,0.12)] transition-all"
             autoFocus
           />
 
           <button
             type="submit"
-            className="absolute right-3 p-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-colors shadow-md"
+            className="absolute right-2.5 p-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400 text-white transition-all shadow-[0_0_15px_rgba(244,114,182,0.45)]"
             title="Search"
           >
             <Search className="w-4 h-4" />
@@ -175,14 +179,14 @@ export const NewTabPage: React.FC<NewTabPageProps> = ({
       <div className="w-full max-w-4xl z-10 mb-10">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
-            <Globe className="w-4 h-4 text-indigo-400" />
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+            <Globe className="w-4 h-4 text-pink-400" />
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-pink-300/70">
               {t.shortcutsTitle}
             </h2>
           </div>
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center space-x-1 text-xs text-indigo-400 hover:text-indigo-300 transition-colors bg-indigo-500/10 hover:bg-indigo-500/20 px-2.5 py-1 rounded-lg"
+            className="flex items-center space-x-1 text-xs text-pink-300 hover:text-pink-100 bg-pink-500/15 hover:bg-pink-500/25 border border-pink-400/30 px-3 py-1 rounded-xl transition-all shadow-sm"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>{t.addShortcut}</span>
@@ -202,7 +206,7 @@ export const NewTabPage: React.FC<NewTabPageProps> = ({
                     onOpenInNewTab(sc.url);
                   }
                 }}
-                className="group relative flex flex-col items-center justify-center p-3 rounded-xl bg-[#1a1a22]/80 hover:bg-[#23232e] border border-white/5 hover:border-indigo-500/40 cursor-pointer transition-all duration-200 hover:-translate-y-1 shadow-sm"
+                className="group relative flex flex-col items-center justify-center p-3.5 rounded-2xl bg-white/[0.035] hover:bg-white/[0.08] backdrop-blur-xl border border-pink-500/20 hover:border-pink-400/60 cursor-pointer transition-all duration-200 hover:-translate-y-1.5 shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:shadow-[0_12px_28px_rgba(244,114,182,0.25)]"
                 title={`${sc.title}\n${sc.url}`}
               >
                 {/* Delete button */}
@@ -211,7 +215,7 @@ export const NewTabPage: React.FC<NewTabPageProps> = ({
                     e.stopPropagation();
                     onRemoveShortcut(sc.id);
                   }}
-                  className="absolute top-1.5 right-1.5 p-1 rounded-md opacity-0 group-hover:opacity-100 bg-[#2b2b36] hover:bg-red-500/80 text-gray-400 hover:text-white transition-opacity"
+                  className="absolute top-1.5 right-1.5 p-1 rounded-md opacity-0 group-hover:opacity-100 bg-[#2b1735] hover:bg-rose-500 text-pink-300 hover:text-white transition-opacity"
                   title="Remove shortcut"
                 >
                   <X className="w-3 h-3" />
@@ -221,17 +225,17 @@ export const NewTabPage: React.FC<NewTabPageProps> = ({
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-base text-white mb-2 shadow-inner"
                   style={{
-                    backgroundColor: sc.color || '#6366f1',
+                    backgroundColor: sc.color || '#ec4899',
                   }}
                 >
                   {letter}
                 </div>
 
                 {/* Title */}
-                <span className="text-xs font-medium text-gray-200 group-hover:text-white text-center truncate w-full">
+                <span className="text-xs font-medium text-pink-100 group-hover:text-white text-center truncate w-full">
                   {sc.title}
                 </span>
-                <span className="text-[10px] text-gray-500 truncate w-full text-center">
+                <span className="text-[10px] text-pink-300/50 truncate w-full text-center">
                   {getDomain(sc.url)}
                 </span>
               </div>
@@ -241,10 +245,10 @@ export const NewTabPage: React.FC<NewTabPageProps> = ({
           {/* Add Tile */}
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="flex flex-col items-center justify-center p-3 rounded-xl border border-dashed border-white/10 hover:border-indigo-500/50 hover:bg-[#1a1a24] text-gray-400 hover:text-indigo-300 transition-all group"
+            className="flex flex-col items-center justify-center p-3.5 rounded-2xl border border-dashed border-pink-400/30 hover:border-pink-400/70 hover:bg-pink-500/10 text-pink-300/70 hover:text-pink-100 transition-all group backdrop-blur-md"
           >
-            <div className="w-10 h-10 rounded-xl bg-[#202028] group-hover:bg-indigo-500/20 flex items-center justify-center mb-2 transition-colors">
-              <Plus className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            <div className="w-10 h-10 rounded-xl bg-pink-950/40 group-hover:bg-pink-500/25 border border-pink-500/20 flex items-center justify-center mb-2 transition-colors">
+              <Plus className="w-5 h-5 group-hover:scale-110 text-pink-400 group-hover:text-pink-200 transition-transform" />
             </div>
             <span className="text-xs font-medium">{t.addShortcut}</span>
           </button>
@@ -254,44 +258,44 @@ export const NewTabPage: React.FC<NewTabPageProps> = ({
       {/* Dual Section: Bookmarks & Recently Closed */}
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-5 z-10">
         {/* Bookmarks Card */}
-        <div className="bg-[#181820]/70 backdrop-blur-md rounded-2xl border border-white/5 p-4 flex flex-col">
+        <div className="bg-[#160c1d]/60 backdrop-blur-2xl rounded-3xl border border-pink-500/20 p-5 flex flex-col shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-pink-400/35 transition-colors">
           <div className="flex items-center space-x-2 mb-3">
-            <Bookmark className="w-4 h-4 text-amber-400" />
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-300">
+            <Bookmark className="w-4 h-4 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.3)]" />
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-pink-200">
               {t.bookmarks} ({bookmarks.length})
             </h3>
           </div>
 
           <div className="flex-1 space-y-1.5 overflow-y-auto max-h-48 pr-1">
             {bookmarks.length === 0 ? (
-              <p className="text-xs text-gray-500 italic py-4 text-center">
-                ยังไม่มีบุ๊กมาร์ก (กดปุ่ม ⭐ บน Address bar เพื่อเพิ่ม)
+              <p className="text-xs text-pink-300/40 italic py-4 text-center">
+                {language === 'th' ? 'ยังไม่มีบุ๊กมาร์ก (กดปุ่ม ⭐ บน Address bar เพื่อเพิ่ม)' : 'No bookmarks yet (click ⭐ on the address bar to add)'}
               </p>
             ) : (
               bookmarks.map((bm) => (
                 <div
                   key={bm.id}
                   onClick={() => onNavigate(bm.url)}
-                  className="flex items-center justify-between p-2 rounded-lg hover:bg-[#22222c] cursor-pointer text-xs transition-colors group"
+                  className="flex items-center justify-between p-2 rounded-xl hover:bg-pink-500/15 cursor-pointer text-xs transition-colors group"
                 >
                   <div className="flex items-center space-x-2.5 truncate flex-1">
                     {bm.favicon ? (
                       <img
                         src={bm.favicon}
                         alt=""
-                        className="w-4 h-4 rounded-sm object-contain flex-shrink-0"
+                        className="w-4 h-4 rounded-md object-contain flex-shrink-0"
                         onError={(e) => {
                           (e.target as HTMLElement).style.display = 'none';
                         }}
                       />
                     ) : (
-                      <Globe className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+                      <Globe className="w-3.5 h-3.5 text-pink-400/50 flex-shrink-0" />
                     )}
-                    <span className="truncate text-gray-200 group-hover:text-white font-medium">
+                    <span className="truncate text-pink-100 group-hover:text-white font-medium">
                       {bm.title || bm.url}
                     </span>
                   </div>
-                  <span className="text-[10px] text-gray-500 group-hover:text-indigo-400 ml-2">
+                  <span className="text-[10px] text-pink-300/50 group-hover:text-pink-300 ml-2">
                     {getDomain(bm.url)}
                   </span>
                 </div>
@@ -301,18 +305,18 @@ export const NewTabPage: React.FC<NewTabPageProps> = ({
         </div>
 
         {/* Recently Closed Tabs Card (กู้คืนแท็บที่เผลอปิด) */}
-        <div className="bg-[#181820]/70 backdrop-blur-md rounded-2xl border border-white/5 p-4 flex flex-col">
+        <div className="bg-[#160c1d]/60 backdrop-blur-2xl rounded-3xl border border-pink-500/20 p-5 flex flex-col shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-pink-400/35 transition-colors">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
-              <RotateCcw className="w-4 h-4 text-emerald-400" />
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-300">
+              <RotateCcw className="w-4 h-4 text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]" />
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-pink-200">
                 {t.recentlyClosedTitle} ({recentlyClosed.length})
               </h3>
             </div>
             {recentlyClosed.length > 0 && (
               <button
                 onClick={onRestoreClosedTab}
-                className="text-[11px] text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-0.5 rounded transition-colors flex items-center space-x-1"
+                className="text-[11px] text-emerald-300 hover:text-emerald-100 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 px-2.5 py-0.5 rounded-lg transition-all flex items-center space-x-1"
                 title="Ctrl+Shift+T"
               >
                 <span>{t.restore} ล่าสุด</span>
@@ -322,7 +326,7 @@ export const NewTabPage: React.FC<NewTabPageProps> = ({
 
           <div className="flex-1 space-y-1.5 overflow-y-auto max-h-48 pr-1">
             {recentlyClosed.length === 0 ? (
-              <p className="text-xs text-gray-500 italic py-4 text-center">
+              <p className="text-xs text-pink-300/40 italic py-4 text-center">
                 {t.emptyRecentlyClosed}
               </p>
             ) : (
@@ -330,22 +334,22 @@ export const NewTabPage: React.FC<NewTabPageProps> = ({
                 <div
                   key={rc.id}
                   onClick={() => onNavigate(rc.url)}
-                  className="flex items-center justify-between p-2 rounded-lg hover:bg-[#22222c] cursor-pointer text-xs transition-colors group"
+                  className="flex items-center justify-between p-2 rounded-xl hover:bg-pink-500/15 cursor-pointer text-xs transition-colors group"
                 >
                   <div className="flex items-center space-x-2.5 truncate flex-1">
                     {rc.favicon ? (
                       <img
                         src={rc.favicon}
                         alt=""
-                        className="w-4 h-4 rounded-sm object-contain flex-shrink-0"
+                        className="w-4 h-4 rounded-md object-contain flex-shrink-0"
                         onError={(e) => {
                           (e.target as HTMLElement).style.display = 'none';
                         }}
                       />
                     ) : (
-                      <Clock className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+                      <Clock className="w-3.5 h-3.5 text-pink-400/50 flex-shrink-0" />
                     )}
-                    <span className="truncate text-gray-200 group-hover:text-white">
+                    <span className="truncate text-pink-100 group-hover:text-white">
                       {rc.title || rc.url}
                     </span>
                   </div>
@@ -361,15 +365,15 @@ export const NewTabPage: React.FC<NewTabPageProps> = ({
 
       {/* Add Shortcut Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1b1b22] rounded-2xl border border-white/10 w-full max-w-md p-5 shadow-2xl">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-[#1a0f24]/95 backdrop-blur-2xl rounded-3xl border border-pink-400/35 w-full max-w-md p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-white">
+              <h3 className="text-sm font-semibold text-pink-100">
                 {t.addShortcutTitle}
               </h3>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-[#2a2a36]"
+                className="p-1 rounded-lg text-pink-300/60 hover:text-white hover:bg-pink-500/20 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -377,7 +381,7 @@ export const NewTabPage: React.FC<NewTabPageProps> = ({
 
             <form onSubmit={handleSaveShortcut} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                <label className="block text-xs font-medium text-pink-200/80 mb-1.5">
                   {t.shortcutName}
                 </label>
                 <input
@@ -385,13 +389,13 @@ export const NewTabPage: React.FC<NewTabPageProps> = ({
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="เช่น YouTube, MangaDex"
-                  className="w-full px-3 py-2 bg-[#121216] rounded-xl border border-white/10 focus:border-indigo-500 text-xs text-white focus:outline-none"
+                  className="w-full px-3.5 py-2 bg-[#120818]/90 rounded-xl border border-pink-500/30 focus:border-pink-400 text-xs text-pink-50 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
                   autoFocus
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                <label className="block text-xs font-medium text-pink-200/80 mb-1.5">
                   {t.shortcutUrl}
                 </label>
                 <input
@@ -399,22 +403,22 @@ export const NewTabPage: React.FC<NewTabPageProps> = ({
                   value={newUrl}
                   onChange={(e) => setNewUrl(e.target.value)}
                   placeholder="https://..."
-                  className="w-full px-3 py-2 bg-[#121216] rounded-xl border border-white/10 focus:border-indigo-500 text-xs text-white focus:outline-none"
+                  className="w-full px-3.5 py-2 bg-[#120818]/90 rounded-xl border border-pink-500/30 focus:border-pink-400 text-xs text-pink-50 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                <label className="block text-xs font-medium text-pink-200/80 mb-1.5">
                   สีของไอคอน
                 </label>
                 <div className="flex space-x-2">
-                  {['#ef4444', '#f97316', '#eab308', '#10b981', '#06b6d4', '#3b82f6', '#6366f1', '#a855f7', '#ec4899'].map((c) => (
+                  {['#ec4899', '#f43f5e', '#a855f7', '#8b5cf6', '#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#f97316'].map((c) => (
                     <button
                       key={c}
                       type="button"
                       onClick={() => setNewColor(c)}
                       className={`w-6 h-6 rounded-full border-2 transition-transform ${
-                        newColor === c ? 'scale-125 border-white' : 'border-transparent hover:scale-110'
+                        newColor === c ? 'scale-125 border-white shadow-[0_0_10px_rgba(255,255,255,0.5)]' : 'border-transparent hover:scale-110'
                       }`}
                       style={{ backgroundColor: c }}
                     />
@@ -426,14 +430,14 @@ export const NewTabPage: React.FC<NewTabPageProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-3.5 py-1.5 rounded-xl text-xs text-gray-400 hover:bg-[#252530]"
+                  className="px-3.5 py-1.5 rounded-xl text-xs text-pink-300/60 hover:text-pink-100 hover:bg-pink-500/20 transition-colors"
                 >
                   {t.cancel}
                 </button>
                 <button
                   type="submit"
                   disabled={!newTitle.trim() || !newUrl.trim()}
-                  className="px-4 py-1.5 rounded-xl text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-40 transition-colors"
+                  className="px-4 py-1.5 rounded-xl text-xs font-medium bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400 text-white disabled:opacity-40 transition-all shadow-[0_0_15px_rgba(244,114,182,0.35)]"
                 >
                   {t.save}
                 </button>

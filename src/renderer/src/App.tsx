@@ -350,9 +350,9 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-[#121214] overflow-hidden select-none">
+    <div className="flex flex-col h-screen w-screen bg-[#0f0914] text-pink-50 overflow-hidden select-none">
       {/* Top Bar Container: TabBar (40px) + NavigationBar (38px) + optional BookmarksBar (30px) */}
-      <header className="flex-shrink-0 z-30">
+      <header className="flex-shrink-0 z-30 shadow-lg shadow-pink-950/20">
         <TabBar
           tabs={tabs}
           activeTabId={activeTabId}

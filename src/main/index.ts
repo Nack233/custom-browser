@@ -32,8 +32,8 @@ async function createWindow() {
     icon: iconPath,
     titleBarStyle: 'hidden',
     titleBarOverlay: {
-      color: '#121214',
-      symbolColor: '#9ca3af',
+      color: '#150d1b',
+      symbolColor: '#f472b6',
       height: 38,
     },
     webPreferences: {
@@ -41,7 +41,7 @@ async function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
     },
-    backgroundColor: '#121214',
+    backgroundColor: '#0f0914',
   });
 
   // Services
