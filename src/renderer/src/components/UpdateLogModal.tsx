@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   Calendar,
   Wrench,
+  Globe,
 } from 'lucide-react';
 
 interface UpdateLogModalProps {
@@ -117,6 +118,18 @@ export const UpdateLogModal: React.FC<UpdateLogModalProps> = ({
                 {isTh
                   ? 'สามารถหมุนล้อเมาส์บนไอคอนลำโพงที่หัวแท็บเพื่อปรับระดับความดังขึ้น-ลงได้อย่างรวดเร็ว และคลิกเพื่อ Mute/Unmute'
                   : 'Quickly adjust volume by scrolling the mouse wheel on the tab speaker icon, and click to instantly mute/unmute.'}
+              </p>
+            </div>
+
+            <div className="p-3 bg-[#1c1a24] border border-blue-500/25 rounded-xl space-y-1">
+              <div className="flex items-center space-x-1.5 text-blue-300 font-semibold text-[11px]">
+                <Globe className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>{isTh ? 'ระบบ Web Localization (รองรับภาษาไทย/อังกฤษใน YouTube & Google)' : 'Web Localization (YouTube & Google in TH/EN)'}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 leading-relaxed pl-5">
+                {isTh
+                  ? 'เมื่อเปลี่ยนภาษาใน Settings ระบบจะส่ง Accept-Language และตั้งค่าคุกกี้ภาษา (PREF) ไปยังเว็บไซต์ เช่น YouTube และ Google โดยตรง ทำให้หน้าเว็บแสดงผล UI เป็นภาษาไทยหรืออังกฤษตามที่ต้องการทันที'
+                  : 'Changing browser language now injects Accept-Language and PREF cookies into external sites like YouTube and Google, automatically rendering their UI in Thai or English.'}
               </p>
             </div>
           </div>

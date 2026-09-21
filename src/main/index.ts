@@ -5,6 +5,7 @@ import { MediaSnifferService } from './mediaSniffer';
 import { ViewManager } from './viewManager';
 import { SettingsManager } from './settingsManager';
 import { DownloadManager } from './downloadManager';
+import { LocaleManager } from './localeManager';
 import { session } from 'electron';
 
 let mainWindow: BrowserWindow | null = null;
@@ -13,6 +14,7 @@ let adblocker: AdBlockService | null = null;
 let mediaSniffer: MediaSnifferService | null = null;
 let settingsManager: SettingsManager | null = null;
 let downloadManager: DownloadManager | null = null;
+let localeManager: LocaleManager | null = null;
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
@@ -49,7 +51,14 @@ async function createWindow() {
 
   adblocker = new AdBlockService();
   mediaSniffer = new MediaSnifferService(downloadManager);
-  viewManager = new ViewManager(mainWindow, adblocker, mediaSniffer, settingsManager || undefined, downloadManager);
+  viewManager = new ViewManager(
+    mainWindow,
+    adblocker,
+    mediaSniffer,
+    settingsManager || undefined,
+    downloadManager,
+    localeManager || undefined
+  );
   mediaSniffer.setActiveTabProvider(() => viewManager?.getActiveTabId() || null);
 
   // Wire up listeners to notify React UI
@@ -204,8 +213,13 @@ function setupIpc() {
     return settingsManager?.getSettings();
   });
 
-  ipcMain.handle('settings:update', (_event, partial) => {
-    return settingsManager?.updateSettings(partial);
+  ipcMain.handle('settings:update', async (_event, partial) => {
+    const res = settingsManager?.updateSettings(partial);
+    if (partial.language && localeManager) {
+      await localeManager.setLanguage(partial.language);
+      await viewManager?.applyLanguage(partial.language);
+    }
+    return res;
   });
 
   ipcMain.handle('app:relaunch', () => {
@@ -303,6 +317,10 @@ app.on('certificate-error', (event, _webContents, _url, _error, _certificate, ca
 
 // Early configuration: Hardware Acceleration MUST be disabled before app is ready
 settingsManager = new SettingsManager();
+const savedLang = settingsManager.getSettings().language || 'th';
+app.commandLine.appendSwitch('lang', savedLang === 'th' ? 'th-TH' : 'en-US');
+localeManager = new LocaleManager(savedLang);
+
 if (settingsManager.getSettings().hardwareAcceleration === false) {
   app.disableHardwareAcceleration();
   console.log('[GPU] Hardware Acceleration is disabled (Discord Netflix stream capture mode)');
@@ -312,6 +330,9 @@ if (settingsManager.getSettings().hardwareAcceleration === false) {
 
 app.whenReady().then(async () => {
   settingsManager.applyDns();
+  if (localeManager) {
+    await localeManager.applyToSession(session.defaultSession);
+  }
 
   setupIpc();
   await createWindow();

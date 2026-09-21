@@ -84,8 +84,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const handleLanguageSelect = async (lang: Language) => {
     onLanguageChange(lang);
     await window.browserApi.updateSettings({ language: lang });
-    setToastMessage(lang === 'th' ? 'เปลี่ยนเป็นภาษาไทยแล้ว' : 'Switched to English');
-    setTimeout(() => setToastMessage(null), 2500);
+    setToastMessage(
+      lang === 'th'
+        ? '🇹🇭 สลับเป็นภาษาไทยแล้ว (ปรับ UI เว็บไซต์ YouTube & เบราว์เซอร์)'
+        : '🇺🇸 Switched to English (YouTube & Browser localized)'
+    );
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
   const handleSaveDns = async () => {
@@ -445,13 +449,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         )}
         {/* Tab 1: Language */}
         {activeTab === 'language' && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div>
               <h3 className="text-xs font-semibold text-gray-200">{t.selectLanguage}</h3>
-              <p className="text-[11px] text-gray-500 mt-0.5">
+              <p className="text-[11px] text-gray-400 mt-0.5 leading-relaxed">
                 {language === 'th'
-                  ? 'เลือกภาษาที่ต้องการให้แสดงในแถบเมนูและเครื่องมือ'
-                  : 'Choose the interface language for tabs and menus'}
+                  ? 'เลือกภาษาสำหรับเบราว์เซอร์และเว็บไซต์ภายนอก (Localization เช่น YouTube, Google ฯลฯ)'
+                  : 'Choose language for browser interface and website localization (YouTube, Google, etc.)'}
               </p>
             </div>
 
@@ -469,7 +473,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <span className="text-2xl">🇹🇭</span>
                   <div>
                     <p className="text-xs font-semibold text-gray-100">{t.thaiLang}</p>
-                    <p className="text-[10px] text-gray-400">ภาษาไทยเริ่มต้น</p>
+                    <p className="text-[10px] text-gray-400">
+                      {language === 'th' ? 'เมนูภาษาไทย + YouTube/Google แสดงภาษาไทย' : 'Thai UI + YouTube/Google in Thai'}
+                    </p>
                   </div>
                 </div>
                 {language === 'th' && <Check className="w-4 h-4 text-blue-400" />}
@@ -488,10 +494,27 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <span className="text-2xl">🇺🇸</span>
                   <div>
                     <p className="text-xs font-semibold text-gray-100">{t.engLang}</p>
-                    <p className="text-[10px] text-gray-400">Standard English</p>
+                    <p className="text-[10px] text-gray-400">
+                      {language === 'th' ? 'เมนูภาษาอังกฤษ + YouTube/Google แสดงภาษาอังกฤษ' : 'English UI + YouTube/Google in English'}
+                    </p>
                   </div>
                 </div>
                 {language === 'en' && <Check className="w-4 h-4 text-blue-400" />}
+              </div>
+            </div>
+
+            {/* Localization Info Card */}
+            <div className="p-3.5 rounded-xl bg-[#141b2b] border border-blue-500/30 text-blue-200">
+              <div className="flex items-start space-x-2.5">
+                <Globe className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-400" />
+                <div className="text-[11px] leading-relaxed text-blue-200/80">
+                  <span className="font-semibold text-blue-100 block mb-0.5">
+                    {language === 'th' ? '🌐 ระบบปรับภาษาเว็บไซต์อัตโนมัติ (Web Localization):' : '🌐 Automatic Web Localization:'}
+                  </span>
+                  {language === 'th'
+                    ? 'เมื่อสลับภาษา เบราว์เซอร์จะส่งค่า Accept-Language และตั้งค่าคุกกี้ภาษา (PREF) ไปยัง YouTube, Google ฯลฯ อัตโนมัติ พร้อมรีเฟรชหน้าเว็บแท็บปัจจุบันทันที ไม่ต้องกดสลับภาษาในเว็บซ้ำ'
+                    : 'When switching, the browser sends Accept-Language headers and updates platform cookies (PREF) for YouTube, Google, etc. Current active website reloads automatically in the chosen language.'}
+                </div>
               </div>
             </div>
           </div>

@@ -4,6 +4,7 @@ import { AdBlockService } from './adblocker';
 import { MediaSnifferService } from './mediaSniffer';
 import { SettingsManager } from './settingsManager';
 import type { DownloadManager } from './downloadManager';
+import type { LocaleManager } from './localeManager';
 
 interface ManagedTab {
   id: string;
@@ -42,19 +43,24 @@ export class ViewManager {
   private forceDarkMode = false;
   private recentlyClosedTabs: RecentlyClosedItem[] = [];
   private sleepCheckInterval: NodeJS.Timeout | null = null;
+  private localeManager?: LocaleManager;
+  private currentLanguage: 'th' | 'en' = 'th';
 
   constructor(
     mainWindow: BrowserWindow,
     adblocker: AdBlockService,
     mediaSniffer: MediaSnifferService,
     settingsManager?: SettingsManager,
-    downloadManager?: DownloadManager
+    downloadManager?: DownloadManager,
+    localeManager?: LocaleManager
   ) {
     this.mainWindow = mainWindow;
     this.adblocker = adblocker;
     this.mediaSniffer = mediaSniffer;
     this.settingsManager = settingsManager;
     this.downloadManager = downloadManager;
+    this.localeManager = localeManager;
+    this.currentLanguage = settingsManager?.getSettings().language || 'th';
 
     this.setupWindowEvents();
     this.startSleepMonitor();
@@ -173,6 +179,9 @@ export class ViewManager {
       });
       this.adblocker.attachSession(view.webContents.session);
       this.downloadManager?.attachSession(view.webContents.session);
+      if (this.localeManager) {
+        this.localeManager.applyToSession(view.webContents.session, this.currentLanguage);
+      }
     } else {
       view = new WebContentsView();
     }
@@ -220,6 +229,9 @@ export class ViewManager {
       });
       this.adblocker.attachSession(view.webContents.session);
       this.downloadManager?.attachSession(view.webContents.session);
+      if (this.localeManager) {
+        this.localeManager.applyToSession(view.webContents.session, this.currentLanguage);
+      }
     } else {
       view = new WebContentsView();
     }
@@ -435,6 +447,11 @@ export class ViewManager {
 
       // Re-apply volume and mute
       this.applyVolumeToWebContents(wc, tab.volume, tab.isMuted);
+
+      // Re-apply web localization injection (navigator.language)
+      if (this.localeManager) {
+        wc.executeJavaScript(this.localeManager.getInjectionScript()).catch(() => {});
+      }
     });
   }
 
@@ -695,6 +712,32 @@ export class ViewManager {
         wc.closeDevTools();
       } else {
         wc.openDevTools({ mode: 'right' });
+      }
+    }
+  }
+
+  public async applyLanguage(lang: 'th' | 'en') {
+    this.currentLanguage = lang;
+    if (this.localeManager) {
+      await this.localeManager.setLanguage(lang);
+    }
+
+    // Apply to all open tabs
+    for (const tab of this.tabs.values()) {
+      if (tab.view && !tab.isSleeping && this.localeManager) {
+        tab.view.webContents.executeJavaScript(this.localeManager.getInjectionScript()).catch(() => {});
+      }
+    }
+
+    // If active tab is on a website (e.g. YouTube), reload it so the website updates its UI language immediately
+    const activeTab = this.getActiveTab();
+    if (activeTab && activeTab.view && !activeTab.isSleeping && activeTab.url && !isNewTabUrl(activeTab.url)) {
+      let targetUrl = activeTab.url;
+      if (targetUrl.includes('hl=')) {
+        targetUrl = targetUrl.replace(/hl=[^&]*/g, `hl=${lang === 'th' ? 'th' : 'en'}`);
+        activeTab.view.webContents.loadURL(targetUrl);
+      } else {
+        activeTab.view.webContents.reloadIgnoringCache();
       }
     }
   }
