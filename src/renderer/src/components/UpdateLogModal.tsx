@@ -57,11 +57,11 @@ export const UpdateLogModal: React.FC<UpdateLogModalProps> = ({
                 {isTh ? 'ประวัติการอัปเดต (Update Log)' : 'Changelog & Updates'}
               </h2>
               <span className="px-1.5 py-0.2 text-[9px] font-bold font-mono uppercase rounded bg-pink-500/20 text-pink-300 border border-pink-500/30">
-                v1.3.0
+                v1.3.1
               </span>
             </div>
             <p className="text-[10px] text-gray-400 mt-0.5">
-              {isTh ? 'v1.3.0: Media Control & Windows Volume Mixer' : 'v1.3.0: Media Control & Windows Volume Mixer'}
+              {isTh ? 'v1.3.1: Advertisement Alt Blocker & Banner Hotfix' : 'v1.3.1: Advertisement Alt Blocker & Banner Hotfix'}
             </p>
           </div>
         </div>
@@ -76,13 +76,55 @@ export const UpdateLogModal: React.FC<UpdateLogModalProps> = ({
 
       {/* Body Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-5 text-xs text-gray-300 no-scrollbar">
+        {/* VERSION 1.3.1 (HOTFIX: ADVERTISEMENT BLOCKER & BANNER PURGE) */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between pb-1.5 border-b border-[#2a2a38]">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-bold text-pink-400 font-mono">v1.3.1</span>
+              <span className="px-1.5 py-0.2 text-[9px] font-semibold rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                {isTh ? 'แพตช์ด่วนบล็อกโฆษณา' : 'AdBlock Hotfix'}
+              </span>
+            </div>
+            <div className="flex items-center text-gray-500 text-[10px] space-x-1">
+              <Calendar className="w-3 h-3" />
+              <span>2026-09-21</span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="p-3 bg-[#1e251e] border border-emerald-500/30 rounded-xl space-y-1">
+              <div className="flex items-center space-x-1.5 text-emerald-300 font-semibold text-[11px]">
+                <ShieldCheck className="w-3.5 h-3.5 flex-shrink-0 text-emerald-400" />
+                <span>{isTh ? 'บล็อกโฆษณาที่มีแท็ก alt="Advertisement"' : 'Block alt="Advertisement" Elements'}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 leading-relaxed pl-5">
+                {isTh
+                  ? 'ระบบ AdShield เพิ่มกฎ CSS และ MutationObserver เพื่อกำจัดรูปภาพหรือแบนเนอร์ที่มี alt="Advertisement", alt="โฆษณา" และองค์ประกอบลิงก์ <a> ครอบโฆษณาบนหน้าเว็บทั้งหมดทันทีแบบเรียลไทม์'
+                  : 'AdShield now actively strips banner images and wrapping anchors containing alt="Advertisement" or localized ad attributes using CSS and MutationObserver.'}
+              </p>
+            </div>
+
+            <div className="p-3 bg-[#241328] border border-pink-500/30 rounded-xl space-y-1">
+              <div className="flex items-center space-x-1.5 text-pink-300 font-semibold text-[11px]">
+                <Zap className="w-3.5 h-3.5 flex-shrink-0 text-pink-400" />
+                <span>{isTh ? 'สกัดกั้นแบนเนอร์ Mahagame & เว็บพนัน 728x200' : 'Suppress Mahagame & 728x200 Gambling Banners'}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 leading-relaxed pl-5">
+                {isTh
+                  ? 'สกัดกั้นรูปภาพ WebP/PNG/GIF ขนาดแบนเนอร์ยอดนิยม (728x200, 728x90) และคีย์เวิร์ดเว็บพนัน (mahagame, sagame, ufa) ก่อนส่งคำขอออกเครือข่าย พร้อมนับจำนวนที่บล็อกเข้า AdShield Counter'
+                  : 'Network request-level interception for WebP/PNG/GIF dimensional banners (728x200) and gambling keywords, tracked directly in the AdShield counter.'}
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* VERSION 1.3.0 (FEATURE RELEASE: MEDIA CONTROL & VOLUME MIXER) */}
         <div className="space-y-3">
           <div className="flex items-center justify-between pb-1.5 border-b border-[#2a2a38]">
             <div className="flex items-center space-x-2">
               <span className="text-sm font-bold text-pink-400 font-mono">v1.3.0</span>
               <span className="px-1.5 py-0.2 text-[9px] font-semibold rounded bg-pink-500/20 text-pink-300 border border-pink-500/30">
-                {isTh ? 'เวอร์ชันใหม่ล่าสุด' : 'Latest Feature Release'}
+                {isTh ? 'ฟีเจอร์หลัก' : 'Feature Release'}
               </span>
             </div>
             <div className="flex items-center text-gray-500 text-[10px] space-x-1">
@@ -387,7 +429,7 @@ export const UpdateLogModal: React.FC<UpdateLogModalProps> = ({
 
       {/* Footer */}
       <div className="flex items-center justify-between px-4 py-2.5 border-t border-[#22222a] bg-[#121216]">
-        <span className="text-[10px] text-gray-500 font-mono">Bocchy v1.1.1 Hotfix</span>
+        <span className="text-[10px] text-gray-500 font-mono">Bocchy v1.3.1 Hotfix</span>
         <button
           onClick={onClose}
           className="px-3 py-1 bg-[#262633] hover:bg-[#343444] text-white rounded-md text-[11px] font-medium transition-colors"

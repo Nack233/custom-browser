@@ -147,7 +147,7 @@ export const GlobalMediaPanel: React.FC<GlobalMediaPanelProps> = ({
                 <span>{isTh ? 'ศูนย์ควบคุมสื่อ (Media Control)' : 'Media Control'}</span>
               </h2>
               <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold uppercase rounded bg-pink-500/20 text-pink-300 border border-pink-500/30">
-                v1.3.0
+                v1.3.1
               </span>
             </div>
             <p className="text-[11px] text-gray-400">

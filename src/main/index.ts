@@ -166,6 +166,7 @@ function setupIpc() {
 
   ipcMain.handle('adblock:toggle-gif', () => {
     const res = adblocker?.toggleBlockGifAds() ?? true;
+    viewManager?.reapplyAdBlockToAllTabs();
     viewManager?.notifyTabsUpdated();
     return res;
   });

@@ -541,29 +541,21 @@ export class ViewManager {
       }
     });
 
-    // 5. Inject cosmetic styles to hide banner ads and gambling buttons directly on page
-    wc.on('did-finish-load', () => {
-      if (this.adblocker.isBlockGifAds()) {
-        wc.insertCSS(`
-          img[src*=".gif"],
-          img[src*="728x"],
-          img[src*="300x"],
-          img[src*="140x"],
-          img[src*="160x"],
-          [style*=".gif"],
-          a[href*="ufa"],
-          a[href*="bet"],
-          a[href*="slot"],
-          a[href*="casino"],
-          a[href*="line.me"] {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-            height: 0 !important;
-            pointer-events: none !important;
-          }
-        `).catch(() => {});
+    // 5. Inject cosmetic styles and DOM cleaner to hide banner ads and Advertisement elements
+    wc.on('console-message', (_event, _level, message) => {
+      if (message && message.startsWith('__bocchy_ad_blocked__:')) {
+        const src = message.slice('__bocchy_ad_blocked__:'.length);
+        this.adblocker.recordBlocked(tab.id, src);
+        this.notifyTabsUpdated();
       }
+    });
+
+    wc.on('dom-ready', () => {
+      this.injectCosmeticAdBlock(wc, tab.id);
+    });
+
+    wc.on('did-finish-load', () => {
+      this.injectCosmeticAdBlock(wc, tab.id);
 
       if (this.forceDarkMode) {
         this.applyForceDark(wc, true);
@@ -1122,5 +1114,115 @@ export class ViewManager {
     const isFs = !this.mainWindow.isFullScreen();
     this.mainWindow.setFullScreen(isFs);
     return isFs;
+  }
+
+  public injectCosmeticAdBlock(wc: Electron.WebContents, tabId: string) {
+    if (wc.isDestroyed() || !this.adblocker.isBlockGifAds()) return;
+
+    // 1. Instant CSS rules to hide any advertisement images, alt tags, and banner anchors
+    const adCss = `
+      img[alt*="Advertisement" i],
+      img[alt*="advertisement" i],
+      img[alt*="โฆษณา" i],
+      img[alt*="sponsored" i],
+      [alt="Advertisement" i],
+      [alt*="Advertisement" i],
+      [alt="โฆษณา" i],
+      [alt*="โฆษณา" i],
+      img[title*="Advertisement" i],
+      img[title*="โฆษณา" i],
+      [aria-label*="Advertisement" i],
+      [aria-label*="โฆษณา" i],
+      a:has(> img[alt*="Advertisement" i]),
+      a:has(> img[alt*="advertisement" i]),
+      a:has(> img[alt*="โฆษณา" i]),
+      a:has(> img[alt*="sponsored" i]),
+      a:has(img[alt*="Advertisement" i]),
+      a:has(img[alt*="advertisement" i]),
+      div:has(> a > img[alt*="Advertisement" i]),
+      div:has(> a > img[alt*="advertisement" i]),
+      div:has(> a > img[alt*="โฆษณา" i]),
+      div:has(> img[alt*="Advertisement" i]),
+      div:has(> img[alt*="advertisement" i]),
+      div:has(> img[alt*="โฆษณา" i]),
+      img[src*=".gif"],
+      img[src*="728x"],
+      img[src*="300x"],
+      img[src*="140x"],
+      img[src*="160x"],
+      img[src*="mahagame"],
+      [style*=".gif"],
+      a[href*="ufa"],
+      a[href*="bet"],
+      a[href*="slot"],
+      a[href*="casino"],
+      a[href*="mahagame"],
+      a[href*="line.me"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        max-height: 0 !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        pointer-events: none !important;
+      }
+    `;
+    wc.insertCSS(adCss).catch(() => {});
+
+    // 2. Active DOM Cleaner & MutationObserver script
+    const adScript = `
+      (function() {
+        function cleanAds() {
+          var selectors = [
+            'img[alt*="Advertisement" i]',
+            'img[alt*="advertisement" i]',
+            'img[alt*="โฆษณา" i]',
+            'img[alt*="sponsored" i]',
+            '[alt="Advertisement" i]',
+            '[alt*="Advertisement" i]',
+            '[alt="โฆษณา" i]',
+            '[alt*="โฆษณา" i]',
+            'img[src*="mahagame" i]'
+          ];
+          var targets = document.querySelectorAll(selectors.join(','));
+          for (var i = 0; i < targets.length; i++) {
+            var el = targets[i];
+            if (el.dataset.bocchyAdBlocked) continue;
+            el.dataset.bocchyAdBlocked = 'true';
+            var src = el.src || el.getAttribute('src') || el.getAttribute('alt') || 'Advertisement';
+            console.log('__bocchy_ad_blocked__:' + src);
+            el.style.setProperty('display', 'none', 'important');
+            el.style.setProperty('pointer-events', 'none', 'important');
+
+            var parentA = el.closest('a');
+            if (parentA) {
+              parentA.style.setProperty('display', 'none', 'important');
+              parentA.style.setProperty('pointer-events', 'none', 'important');
+            }
+          }
+        }
+
+        cleanAds();
+
+        if (!window.__bocchy_ad_observer__ && window.MutationObserver && document.body) {
+          window.__bocchy_ad_observer__ = new MutationObserver(function() {
+            cleanAds();
+          });
+          window.__bocchy_ad_observer__.observe(document.body, { childList: true, subtree: true });
+        }
+      })();
+    `;
+    wc.executeJavaScript(adScript).catch(() => {});
+  }
+
+  public reapplyAdBlockToAllTabs() {
+    for (const [id, tab] of this.tabs.entries()) {
+      if (tab.view && !tab.view.webContents.isDestroyed() && !tab.isSleeping) {
+        this.injectCosmeticAdBlock(tab.view.webContents, id);
+      }
+    }
   }
 }

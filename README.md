@@ -12,6 +12,18 @@
 
 ---
 
+## 🛡️ มีอะไรใหม่ในเวอร์ชัน 1.3.1 (Hotfix: Advertisement Alt Blocker & Banner Purge)
+* **🚫 บล็อกโฆษณาที่มีแท็ก `alt="Advertisement"` และ `alt="โฆษณา"` ทั่วทั้งเว็บ:**
+  * ขยายระบบกรองสไตล์ความเร็วสูง (Cosmetic Filtering) ครอบคลุมแอตทริบิวต์ `img[alt*="Advertisement" i]`, `[alt="Advertisement" i]`, `img[alt*="โฆษณา" i]`, `img[alt*="sponsored" i]` และแท็กครอบลิงก์ `a:has(> img[alt*="Advertisement" i])`
+  * ซ่อนแบนเนอร์โฆษณาทันทีตั้งแต่ระดับเอนจินแสดงผล (Layout Engine) ทั้งในอีเวนต์ `dom-ready` และ `did-finish-load` ป้องกันอาการแบนเนอร์กะพริบก่อนโหลดเสร็จ
+* **🧹 ทำความสะอาด DOM แบบไดนามิก (Real-time DOM Cleaner & MutationObserver):**
+  * สคริปต์ตรวจจับองค์ประกอบโฆษณาที่ถูกแทรกเข้ามาใหม่แบบไดนามิก ปลดล็อกรูปภาพ ลบลิงก์คลิกผี (Ghost Click Anchors) อัตโนมัติ
+  * เชื่อมโยงเข้ากับระบบ **AdShield Counter**: รายการที่ถูกบล็อกจะนับรวมและแสดงผลในสรุปสถิติ `recentBlocked` แบบเรียลไทม์
+* **🎰 สกัดกั้นแบนเนอร์ Mahagame และเว็บพนัน 728x200:**
+  * ปรับแต่ง Network Blocker ให้ดักจับไฟล์ภาพ WebP, PNG, JPG ที่มีมิติแบนเนอร์ (728x200, 728x90) และคีย์เวิร์ดเว็บพนันยอดนิยม เช่น `mahagame`, `sagame`, `ufa` ตัดการดาวน์โหลดก่อนส่งคำขอออกเครือข่าย
+
+---
+
 ## 🎵 มีอะไรใหม่ในเวอร์ชัน 1.3.0 (Global Media Panel & Volume Mixer)
 * **🎛️ ศูนย์ควบคุมสื่อส่วนกลาง (Global Media Panel):**
   * เพิ่มปุ่มไอคอนตัวโน้ตเพลง 🎵 บน Navigation Bar และในเมนู `...` (More Options)

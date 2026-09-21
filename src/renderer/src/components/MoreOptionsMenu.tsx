@@ -319,7 +319,7 @@ export const MoreOptionsMenu: React.FC<MoreOptionsMenuProps> = ({
             <Sparkles className="w-4 h-4 text-pink-400" />
             <span>{isTh ? 'ประวัติการอัปเดต (What\'s New)' : 'Changelog & What\'s New'}</span>
           </div>
-          <span className="text-[10px] font-mono text-pink-400 font-bold">v1.3.0</span>
+          <span className="text-[10px] font-mono text-pink-400 font-bold">v1.3.1</span>
         </button>
       </div>
     </div>

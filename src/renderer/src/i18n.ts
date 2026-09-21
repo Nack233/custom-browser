@@ -133,7 +133,7 @@ export const translations = {
     openDevTools: 'เปิด DevTools ตรวจสอบแท็บ (F12)',
     openAppDevTools: 'ตรวจสอบโครงสร้าง UI เบราว์เซอร์',
     updateLog: 'ประวัติการอัปเดต (Update Log)',
-    whatsNew: 'มีอะไรใหม่ใน v1.3.0 🎉',
+    whatsNew: 'มีอะไรใหม่ใน v1.3.1 🎉',
     changelog: 'บันทึกการเปลี่ยนแปลง',
     viewUpdateLog: 'ดูสิ่งใหม่ในอัปเดต',
 
@@ -279,7 +279,7 @@ export const translations = {
     openDevTools: 'Open Tab DevTools (F12)',
     openAppDevTools: 'Inspect Browser UI',
     updateLog: 'Update Log',
-    whatsNew: "What's New in v1.3.0 🎉",
+    whatsNew: "What's New in v1.3.1 🎉",
     changelog: 'Changelog',
     viewUpdateLog: 'View Changelog',
 

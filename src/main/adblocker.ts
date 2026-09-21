@@ -150,12 +150,20 @@ export class AdBlockService {
       const host = parsed.hostname.toLowerCase();
       const pathWithQuery = (parsed.pathname + parsed.search).toLowerCase();
 
-      // 1. Block ad GIF banners (gambling, pop, dimensional banner gifs)
-      if (this.blockGifAds && (pathWithQuery.includes('.gif') || parsed.pathname.endsWith('.gif'))) {
-        const isBannerDim = /\b(728x\d+|300x\d+|140x\d+|160x\d+|468x\d+|970x\d+|320x\d+)\b/i.test(pathWithQuery);
-        const hasAdKeyword = /(banner|pop|ufa|slot|bet|casino|baccara|zeed|888|999|168|btt|lttt|popunder|vip|game)/i.test(pathWithQuery);
-        if (isBannerDim || hasAdKeyword || pathWithQuery.includes('banner')) {
-          return true;
+      // 1. Block ad banners (gambling, pop, dimensional banners in gif, webp, png, etc.)
+      if (this.blockGifAds) {
+        const isGif = pathWithQuery.includes('.gif') || parsed.pathname.endsWith('.gif');
+        const isWebpOrImg = /\.(webp|png|jpe?g)($|\?)/i.test(parsed.pathname);
+
+        if (isGif || isWebpOrImg) {
+          const isBannerDim = /\b(728x\d+|300x\d+|140x\d+|160x\d+|468x\d+|970x\d+|320x\d+)\b/i.test(pathWithQuery);
+          const hasAdKeyword = /(banner|pop|ufa|slot|bet|casino|baccara|zeed|mahagame|sagame|gclub|888|999|168|btt|lttt|popunder|vip|advertisement)/i.test(pathWithQuery);
+          if (isGif && (isBannerDim || hasAdKeyword || pathWithQuery.includes('banner'))) {
+            return true;
+          }
+          if (isWebpOrImg && (hasAdKeyword || isBannerDim) && (pathWithQuery.includes('banner') || pathWithQuery.includes('ad') || pathWithQuery.includes('pic/webp') || /(mahagame|pgslot|casino|slot|baccara)/i.test(pathWithQuery))) {
+            return true;
+          }
         }
       }
 
@@ -176,7 +184,7 @@ export class AdBlockService {
       }
 
       // 4. Check Thai gambling / betting ad domains or paths
-      if (/(ufa|slot|pgslot|casino|baccara|bet|sbobet|zeed|888|999|168)[\.\-_/]/i.test(urlStr)) {
+      if (/(ufa|slot|pgslot|casino|baccara|bet|sbobet|zeed|mahagame|sagame|gclub|888|999|168)(\d*)[\.\-_/]/i.test(urlStr)) {
         return true;
       }
     } catch {
@@ -215,7 +223,7 @@ export class AdBlockService {
         host.includes('direct.me') ||
         host.includes('linkvertise') ||
         host.includes('ouo.io') ||
-        /(ufa|bet|slot|casino|pgslot|baccara|lotto|zeed|888|999|168)/i.test(host)
+        /(ufa|bet|slot|casino|pgslot|baccara|lotto|zeed|mahagame|sagame|gclub|888|999|168)/i.test(host)
       ) {
         return true;
       }
